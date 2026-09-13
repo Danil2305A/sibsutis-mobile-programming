@@ -77,7 +77,7 @@ fun RegistrationForm() {
             .padding(16.dp)
     ) {
         Text (
-            text = "Форма регистрации",
+            text = "Регистрация игрока",
             style = MaterialTheme.typography.headlineMedium
         )
         Spacer(Modifier.height(24.dp))
@@ -95,10 +95,10 @@ fun RegistrationForm() {
 
         var player by remember { mutableStateOf<Player?>(null) }
 
+        Text("Введите ФИО:")
         OutlinedTextField(
             value = fullName,
             onValueChange = {fullName = it},
-            label = { Text("Введите ФИО:") },
         )
 
         Spacer(Modifier.height(12.dp))
@@ -119,17 +119,15 @@ fun RegistrationForm() {
 
         Spacer(Modifier.height(12.dp))
 
-        Text("Выберите свой курс:")
+        Text("Выберите курс:")
         ExposedDropdownMenuBox(
             expanded = courseExpanded,
             onExpandedChange = { courseExpanded = !courseExpanded }
         ) {
-//            TODO: добавить суффикс
             OutlinedTextField(
-                value = courses[course - 1] + 'e',
+                value = courses[course - 1],
                 onValueChange = {},
                 readOnly = true,
-                label = { Text("Я учусь на:") },
                 trailingIcon = {
                     ExposedDropdownMenuDefaults.TrailingIcon(expanded = courseExpanded)
                 },
@@ -142,7 +140,7 @@ fun RegistrationForm() {
             ) {
                 courses.forEachIndexed { index, name ->
                     DropdownMenuItem(
-                        text = { Text(name + 'e') },
+                        text = { Text(name) },
                         onClick = {
                             course = index + 1
                             courseExpanded = false
@@ -164,11 +162,11 @@ fun RegistrationForm() {
                 .fillMaxWidth()
                 .padding(horizontal = 48.dp)
         )
-        Text("Выбранная сложность ${difficulty.toInt()}")
+        Text("Значение: ${difficulty.toInt()}")
 
         Spacer(Modifier.height(12.dp))
 
-        Text("Выберите свою дату рождения: ")
+        Text("Выберите дату рождения:")
         val dateFormat = SimpleDateFormat("dd.MM.yyyy", Locale.getDefault())
         OutlinedButton(
             onClick = { showDatePicker = true },
@@ -230,7 +228,7 @@ fun RegistrationForm() {
         }
 
         player?.let { p ->
-            Text("Регистрация игрока:")
+            Text("Зарегистрирован игрок:")
             Spacer(Modifier.height(4.dp))
 
             Text("ФИО: ${p.fullName}")
@@ -238,7 +236,7 @@ fun RegistrationForm() {
             Text("Курс: ${p.course}")
             Text("Уровень сложности: ${p.difficulty}")
             Text("Дата рождения: ${dateFormat.format(p.birthDate.time)}")
-            Text("Знак зодиака: ${p.zodiac}")
+            Text("Знак зодиака:")
 
             Spacer(Modifier.height(12.dp))
 
