@@ -31,6 +31,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -58,18 +59,18 @@ fun RegistrationForm() {
         )
         Spacer(Modifier.height(24.dp))
 
-        var fullName by remember { mutableStateOf("Иванов Иван Иванович") }
-        var gender by remember { mutableStateOf("Мужской") }
-        var course by remember { mutableStateOf(1) }
-        var difficulty by remember { mutableStateOf(1f) }
+        var fullName by rememberSaveable() { mutableStateOf("Иванов Иван Иванович") }
+        var gender by rememberSaveable() { mutableStateOf("Мужской") }
+        var course by rememberSaveable() { mutableStateOf(1) }
+        var difficulty by rememberSaveable() { mutableStateOf(1f) }
 
-        var birthDate by remember { mutableStateOf(Calendar.getInstance()) }
-        var showDatePicker by remember { mutableStateOf(false) }
+        var birthDate by rememberSaveable() { mutableStateOf(Calendar.getInstance()) }
+        var showDatePicker by rememberSaveable() { mutableStateOf(false) }
 
         val courses = listOf("1 курс", "2 курс", "3 курс", "4 курс")
-        var courseExpanded by remember { mutableStateOf(false) }
+        var courseExpanded by rememberSaveable() { mutableStateOf(false) }
 
-        var player by remember { mutableStateOf<Player?>(null) }
+        var player by rememberSaveable() { mutableStateOf<Player?>(null) }
 
         Text("Введите ФИО:")
         OutlinedTextField(
