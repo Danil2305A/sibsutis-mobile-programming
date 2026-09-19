@@ -30,7 +30,6 @@ import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -47,7 +46,7 @@ import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun RegistrationForm() {
+fun RegistrationFormScreen() {
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -231,10 +230,10 @@ fun RegistrationForm() {
     }
 }
 
-@Preview(showBackground = true)
-@Composable
-fun RegistrationFormPreview() {
-    MaterialTheme {
-        RegistrationForm()
-    }
-}
+//@Preview(showBackground = true)
+//@Composable
+//fun RegistrationFormScreenPreview() {
+//    MaterialTheme {
+//        RegistrationFormScreen()
+//    }
+//}
