@@ -38,6 +38,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.example.bugs.model.Gender
 import com.example.bugs.model.Player
 import com.example.bugs.util.ZodiacUtil
 import java.text.SimpleDateFormat
@@ -60,7 +61,7 @@ fun RegistrationForm() {
         Spacer(Modifier.height(24.dp))
 
         var fullName by rememberSaveable() { mutableStateOf("Иванов Иван Иванович") }
-        var gender by rememberSaveable() { mutableStateOf("Мужской") }
+        var gender by rememberSaveable() { mutableStateOf(Gender.MALE) }
         var course by rememberSaveable() { mutableStateOf(1) }
         var difficulty by rememberSaveable() { mutableStateOf(1f) }
 
@@ -83,13 +84,13 @@ fun RegistrationForm() {
         Text("Выберите пол:")
         Row(verticalAlignment = Alignment.CenterVertically) {
             RadioButton(
-                selected = gender == "Мужской",
-                onClick = { gender = "Мужской" }
+                selected = gender == Gender.MALE,
+                onClick = { gender = Gender.MALE }
             )
             Text("Мужской", modifier = Modifier.padding(end = 16.dp))
             RadioButton(
-                selected = gender == "Женский",
-                onClick = { gender = "Женский" }
+                selected = gender == Gender.FEMALE,
+                onClick = { gender = Gender.FEMALE }
             )
             Text("Женский", modifier = Modifier.padding(end = 16.dp))
         }
