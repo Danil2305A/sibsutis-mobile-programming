@@ -210,7 +210,7 @@ fun RegistrationForm() {
             Spacer(Modifier.height(4.dp))
 
             Text("ФИО: ${p.fullName}")
-            Text("Пол: ${p.gender}")
+            Text("Пол: ${if (p.gender == Gender.MALE)  "Мужской" else "Женский"}")
             Text("Курс: ${p.course}")
             Text("Уровень сложности: ${p.difficulty}")
             Text("Дата рождения: ${dateFormat.format(p.birthDate.time)}")
