@@ -37,6 +37,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.example.bugs.model.Gender
 import com.example.bugs.model.Player
+import com.example.bugs.model.RegistrationFormDefaultData
 import com.example.bugs.util.ZodiacUtil
 import java.text.SimpleDateFormat
 import java.util.Calendar
@@ -45,18 +46,20 @@ import java.util.Locale
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RegistrationFormScreen() {
+    val registrationFormDefaultData = RegistrationFormDefaultData()
+
     Column(
         modifier = Modifier
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
             .padding(16.dp)
     ) {
-        var fullName by rememberSaveable() { mutableStateOf("Иванов Иван Иванович") }
-        var gender by rememberSaveable() { mutableStateOf(Gender.MALE.value) }
-        var course by rememberSaveable() { mutableStateOf(1) }
-        var difficulty by rememberSaveable() { mutableStateOf(1f) }
+        var fullName by rememberSaveable() { mutableStateOf(registrationFormDefaultData.fullName) }
+        var gender by rememberSaveable() { mutableStateOf(registrationFormDefaultData.gender) }
+        var course by rememberSaveable() { mutableStateOf(registrationFormDefaultData.course) }
+        var difficulty by rememberSaveable() { mutableStateOf(registrationFormDefaultData.difficulty) }
 
-        var birthDate by rememberSaveable() { mutableStateOf(Calendar.getInstance()) }
+        var birthDate by rememberSaveable() { mutableStateOf(registrationFormDefaultData.birthDate) }
         var showDatePicker by rememberSaveable() { mutableStateOf(false) }
 
         val courses = listOf("1 курс", "2 курс", "3 курс", "4 курс")
