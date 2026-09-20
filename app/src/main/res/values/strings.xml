@@ -1,3 +1,18 @@
 <resources>
-    <string name="app_name">sibsutis-mobile-programming</string>
+    <string name="app_name">Bugs</string>
+
+    <string-array name="tabs">
+        <item>Регистрация игрока</item>
+        <item>Настройки</item>
+        <item>Правила игры</item>
+        <item>Список авторов</item>>
+    </string-array>
+
+    <string name="setting_game_speed">Скорость игры</string>
+    <string name="setting_max_bug_amount">Макс. тараканов на экране</string>
+    <string name="setting_bonus_interval_seconds">Интервал бонусов, сек</string>
+    <string name="setting_round_duration_seconds">Длительность раунда, сек</string>
+
+    <string name="author_ak_danil">Акуско Данил</string>
+    <string name="author_rb_daniil">Рыбкин Даниил</string>
 </resources>

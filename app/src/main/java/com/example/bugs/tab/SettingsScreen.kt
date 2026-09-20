@@ -12,8 +12,10 @@ import androidx.compose.material3.Slider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.example.bugs.R
 import com.example.bugs.repository.rememberGameSettings
 import kotlin.math.roundToInt
 
@@ -26,25 +28,25 @@ fun SettingsScreen() {
         verticalArrangement = Arrangement.spacedBy(24.dp)
     ) {
         SliderRow(
-            label = "Скорость игры",
+            label = stringResource(R.string.setting_game_speed),
             value = settings.value.speed,
             range = 1f..10f,
             onChange = { settings.value = settings.value.copy(speed = it) }
         )
         SliderRow(
-            label = "Макс. тараканов на экране",
+            label = stringResource(R.string.setting_max_bug_amount),
             value = settings.value.maxBugAmount,
             range = 1f..20f,
             onChange = { settings.value = settings.value.copy(maxBugAmount = it) }
         )
         SliderRow(
-            label = "Интервал бонусов, сек",
+            label = stringResource(R.string.setting_bonus_interval_seconds),
             value = settings.value.bonusInterval,
             range = 1f..30f,
             onChange = { settings.value = settings.value.copy(bonusInterval = it) }
         )
         SliderRow(
-            label = "Длительность раунда, сек",
+            label = stringResource(R.string.setting_round_duration_seconds),
             value = settings.value.roundDuration,
             range = 30f..180f,
             onChange = { settings.value = settings.value.copy(roundDuration = it) }

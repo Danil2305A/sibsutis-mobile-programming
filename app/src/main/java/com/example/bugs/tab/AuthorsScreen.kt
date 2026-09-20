@@ -22,6 +22,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.example.bugs.R
 
@@ -30,10 +31,13 @@ data class Author(val name: String, @DrawableRes val photo: Int)
 
 @Composable
 fun AuthorsScreen() {
-    val authors = remember {
+    val name1 = stringResource(R.string.author_ak_danil)
+    val name2 = stringResource(R.string.author_rb_daniil)
+
+    val authors = remember(name1, name2) {
         listOf(
-            Author("Акуско Д.Д.", R.drawable.student_ak_danil),
-            Author("Рыбкин Д.А.", R.drawable.student_rb_daniil)
+            Author(name1, R.drawable.student_ak_danil),
+            Author(name2, R.drawable.student_rb_daniil)
         )
     }
 

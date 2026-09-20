@@ -10,11 +10,13 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
+import com.example.bugs.R
+import androidx.compose.ui.res.stringArrayResource
 import kotlinx.coroutines.launch
 
 @Composable
 fun MainScreen() {
-    val tabs = listOf("Регистрация игрока", "Настройки", "Правила игры", "Список авторов")
+    val tabs = stringArrayResource(R.array.tabs)
     val pagerState = rememberPagerState(pageCount = { tabs.size })
     val scope = rememberCoroutineScope()
 
