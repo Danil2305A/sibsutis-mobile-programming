@@ -19,7 +19,6 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuAnchorType
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.RadioButton
@@ -35,10 +34,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.example.bugs.R
 import com.example.bugs.model.Gender
 import com.example.bugs.model.Player
 import com.example.bugs.util.ZodiacUtil
@@ -56,7 +52,7 @@ fun RegistrationFormScreen() {
             .padding(16.dp)
     ) {
         var fullName by rememberSaveable() { mutableStateOf("Иванов Иван Иванович") }
-        var gender by rememberSaveable() { mutableStateOf(Gender.MALE) }
+        var gender by rememberSaveable() { mutableStateOf(Gender.MALE.value) }
         var course by rememberSaveable() { mutableStateOf(1) }
         var difficulty by rememberSaveable() { mutableStateOf(1f) }
 
@@ -79,13 +75,13 @@ fun RegistrationFormScreen() {
         Text("Выберите пол:")
         Row(verticalAlignment = Alignment.CenterVertically) {
             RadioButton(
-                selected = gender == Gender.MALE,
-                onClick = { gender = Gender.MALE }
+                selected = gender == Gender.MALE.value,
+                onClick = { gender = Gender.MALE.value }
             )
             Text("Мужской", modifier = Modifier.padding(end = 16.dp))
             RadioButton(
-                selected = gender == Gender.FEMALE,
-                onClick = { gender = Gender.FEMALE }
+                selected = gender == Gender.FEMALE.value,
+                onClick = { gender = Gender.FEMALE.value }
             )
             Text("Женский", modifier = Modifier.padding(end = 16.dp))
         }
@@ -205,7 +201,7 @@ fun RegistrationFormScreen() {
             Spacer(Modifier.height(4.dp))
 
             Text("ФИО: ${p.fullName}")
-            Text("Пол: ${if (p.gender == Gender.MALE)  "Мужской" else "Женский"}")
+            Text("Пол: ${p.gender}")
             Text("Курс: ${p.course}")
             Text("Уровень сложности: ${p.difficulty}")
             Text("Дата рождения: ${dateFormat.format(p.birthDate.time)}")
