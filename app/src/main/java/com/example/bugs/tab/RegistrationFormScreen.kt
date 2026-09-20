@@ -81,12 +81,12 @@ fun RegistrationFormScreen() {
                 selected = gender == Gender.MALE.value,
                 onClick = { gender = Gender.MALE.value }
             )
-            Text("Мужской", modifier = Modifier.padding(end = 16.dp))
+            Text(Gender.MALE.value, modifier = Modifier.padding(end = 16.dp))
             RadioButton(
                 selected = gender == Gender.FEMALE.value,
                 onClick = { gender = Gender.FEMALE.value }
             )
-            Text("Женский", modifier = Modifier.padding(end = 16.dp))
+            Text(Gender.FEMALE.value, modifier = Modifier.padding(end = 16.dp))
         }
 
         Spacer(Modifier.height(12.dp))
