@@ -29,6 +29,7 @@ import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -65,7 +66,7 @@ fun RegistrationFormScreen() {
         val courses = listOf("1 курс", "2 курс", "3 курс", "4 курс")
         var courseExpanded by rememberSaveable() { mutableStateOf(false) }
 
-        var player by rememberSaveable() { mutableStateOf<Player?>(null) }
+        var player by remember { mutableStateOf<Player?>(null) }
 
         Text("Введите ФИО:")
         OutlinedTextField(
