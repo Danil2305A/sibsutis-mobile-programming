@@ -79,13 +79,13 @@ fun RegistrationFormScreen() {
         Text("Выберите пол:")
         Row(verticalAlignment = Alignment.CenterVertically) {
             RadioButton(
-                selected = gender == Gender.MALE.value,
-                onClick = { gender = Gender.MALE.value }
+                selected = gender == Gender.MALE,
+                onClick = { gender = Gender.MALE }
             )
             Text(Gender.MALE.value, modifier = Modifier.padding(end = 16.dp))
             RadioButton(
-                selected = gender == Gender.FEMALE.value,
-                onClick = { gender = Gender.FEMALE.value }
+                selected = gender == Gender.FEMALE,
+                onClick = { gender = Gender.FEMALE }
             )
             Text(Gender.FEMALE.value, modifier = Modifier.padding(end = 16.dp))
         }
@@ -205,7 +205,7 @@ fun RegistrationFormScreen() {
             Spacer(Modifier.height(4.dp))
 
             Text("ФИО: ${p.fullName}")
-            Text("Пол: ${p.gender}")
+            Text("Пол: ${p.gender.value}")
             Text("Курс: ${p.course}")
             Text("Уровень сложности: ${p.difficulty}")
             Text("Дата рождения: ${dateFormat.format(p.birthDate.time)}")
