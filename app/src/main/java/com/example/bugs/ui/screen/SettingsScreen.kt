@@ -1,4 +1,4 @@
-package com.example.bugs.tab
+package com.example.bugs.ui.screen
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -16,7 +16,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.bugs.R
-import com.example.bugs.repository.rememberGameSettings
+import com.example.bugs.data.repository.rememberGameSettings
 import kotlin.math.roundToInt
 
 @Composable

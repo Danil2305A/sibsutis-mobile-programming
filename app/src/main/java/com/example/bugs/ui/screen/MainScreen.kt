@@ -1,4 +1,4 @@
-package com.example.bugs.tab
+package com.example.bugs.ui.screen
 
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.pager.HorizontalPager

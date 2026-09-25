@@ -8,3 +8,9 @@
 .externalNativeBuild
 .cxx
 local.properties
+
+*.txt
+*.md
+!README.md
+
+venv/

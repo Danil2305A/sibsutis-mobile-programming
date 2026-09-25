@@ -1,4 +1,4 @@
-package com.example.bugs.model
+package com.example.bugs.data.model
 
 import java.util.Calendar
 

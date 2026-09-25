@@ -1,4 +1,4 @@
-package com.example.bugs.repository
+package com.example.bugs.data.repository
 
 import android.content.Context
 import androidx.compose.runtime.Composable
@@ -7,7 +7,7 @@ import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
-import com.example.bugs.model.GameSettings
+import com.example.bugs.data.model.GameSettings
 
 @Composable
 fun rememberGameSettings(): MutableState<GameSettings> {

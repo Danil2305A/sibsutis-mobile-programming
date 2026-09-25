@@ -1,4 +1,4 @@
-package com.example.bugs.tab
+package com.example.bugs.ui.screen
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Column
@@ -36,9 +36,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
-import com.example.bugs.model.Gender
-import com.example.bugs.model.Player
-import com.example.bugs.model.RegistrationFormDefaultData
+import com.example.bugs.data.model.Gender
+import com.example.bugs.data.model.Player
+import com.example.bugs.data.model.RegistrationFormDefaultData
 import com.example.bugs.util.ZodiacUtil
 import java.text.SimpleDateFormat
 import java.util.Calendar
