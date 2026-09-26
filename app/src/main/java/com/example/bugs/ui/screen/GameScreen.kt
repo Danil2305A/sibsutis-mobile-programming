@@ -21,7 +21,6 @@ import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.drawscope.withTransform
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.res.imageResource
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
@@ -30,7 +29,6 @@ import com.example.bugs.R
 import com.example.bugs.data.model.GameSettings
 import com.example.bugs.viewmodel.GameViewModel
 import kotlinx.coroutines.delay
-import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
 
 @Composable
@@ -98,12 +96,14 @@ fun GameField(viewModel: GameViewModel, modifier: Modifier = Modifier) {
                 }
         ) {
             viewModel.bugs.forEach { bug ->
+                val half = bug.size / 2f
                 withTransform({
-                    translate(left = bug.x, top = bug.y)
+                    translate(left = bug.x + half, top = bug.y + half)
+                    rotate(degrees = bug.angle, pivot = androidx.compose.ui.geometry.Offset.Zero)
                 }) {
                     drawImage(
                         image = bugImage,
-                        dstOffset = IntOffset.Zero,
+                        dstOffset = IntOffset(-half.toInt(), -half.toInt()),
                         dstSize = IntSize(bug.size.toInt(), bug.size.toInt())
                     )
                 }

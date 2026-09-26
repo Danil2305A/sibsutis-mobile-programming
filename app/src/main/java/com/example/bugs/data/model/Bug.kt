@@ -2,8 +2,8 @@ package com.example.bugs.data.model
 
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import kotlin.math.atan2
 
 class Bug(
     val id: Long,
@@ -15,6 +15,11 @@ class Bug(
 ) {
     var x by mutableFloatStateOf(x)
     var y by mutableFloatStateOf(y)
+
+    val angle: Float
+        get() = Math.toDegrees(
+            atan2(velocityY.toDouble(), velocityX.toDouble())
+        ).toFloat() + 90f
 
     companion object {
         const val DEFAULT_SIZE = 230f
