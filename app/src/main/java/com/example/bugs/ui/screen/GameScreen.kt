@@ -76,7 +76,6 @@ fun GameScreen(settings: MutableState<GameSettings>) {
 fun GameField(viewModel: GameViewModel, modifier: Modifier = Modifier) {
     BoxWithConstraints(modifier = modifier
         .fillMaxSize()
-        .background(Color.White)
     ) {
         val widthPx = constraints.maxWidth.toFloat()
         val heightPx = constraints.maxHeight.toFloat()
@@ -116,8 +115,8 @@ fun GameField(viewModel: GameViewModel, modifier: Modifier = Modifier) {
                 .padding(16.dp),
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            Text("Очки: ${viewModel.score}", color = Color.Black)
-            Text("Время: ${viewModel.timeLeft} сек", color = Color.Black)
+            Text("Очки: ${viewModel.score}")
+            Text("Время: ${viewModel.timeLeft} сек")
         }
 
         if (viewModel.isGameOver) {
