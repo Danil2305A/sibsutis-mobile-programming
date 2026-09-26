@@ -12,6 +12,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import com.example.bugs.R
 import androidx.compose.ui.res.stringArrayResource
+import com.example.bugs.data.repository.rememberGameSettings
 import kotlinx.coroutines.launch
 
 @Composable
@@ -19,6 +20,8 @@ fun MainScreen() {
     val tabs = stringArrayResource(R.array.tabs)
     val pagerState = rememberPagerState(pageCount = { tabs.size })
     val scope = rememberCoroutineScope()
+
+    val gameSettings = rememberGameSettings()
 
     Scaffold(
         topBar = {
@@ -39,9 +42,10 @@ fun MainScreen() {
         ) { page ->
             when (page) {
                 0 -> RegistrationFormScreen()
-                1 -> SettingsScreen()
+                1 -> SettingsScreen(gameSettings)
                 2 -> RulesScreen()
                 3 -> AuthorsScreen()
+                4 -> GameScreen(gameSettings)
             }
         }
     }

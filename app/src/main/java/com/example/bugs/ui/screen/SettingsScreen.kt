@@ -11,18 +11,18 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.MutableState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.bugs.R
+import com.example.bugs.data.model.GameSettings
 import com.example.bugs.data.repository.rememberGameSettings
 import kotlin.math.roundToInt
 
 @Composable
-fun SettingsScreen() {
-    val settings = rememberGameSettings()
-
+fun SettingsScreen(settings: MutableState<GameSettings>) {
     Column(
         Modifier.fillMaxSize().padding(24.dp).verticalScroll(rememberScrollState()),
         verticalArrangement = Arrangement.spacedBy(24.dp)
