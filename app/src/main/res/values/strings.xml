@@ -5,8 +5,7 @@
         <item>Регистрация игрока</item>
         <item>Настройки</item>
         <item>Правила игры</item>
-        <item>Список авторов</item>
-        <item>Игра</item>
+        <item>Авторы</item>
     </string-array>
 
     <string name="setting_game_speed">Скорость игры</string>

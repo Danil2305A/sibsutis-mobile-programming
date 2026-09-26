@@ -1,18 +1,23 @@
 package com.example.bugs.ui.screen
 
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRow
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringArrayResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.example.bugs.R
 import com.example.bugs.data.repository.rememberGameSettings
@@ -27,6 +32,7 @@ fun MainScreen() {
         R.drawable.authors,
         R.drawable.game
     )
+    val tabTitles = stringArrayResource(R.array.tabs)
     val pagerState = rememberPagerState(pageCount = { tabIcons.size })
     val scope = rememberCoroutineScope()
 
@@ -56,12 +62,30 @@ fun MainScreen() {
             modifier = Modifier.padding(padding)
         ) { page ->
             when (page) {
-                0 -> RegistrationFormScreen()
-                1 -> SettingsScreen(gameSettings)
-                2 -> RulesScreen()
-                3 -> AuthorsScreen()
+                0 -> TabContentWithTitle(tabTitles[0]) { RegistrationFormScreen() }
+                1 -> TabContentWithTitle(tabTitles[1]) { SettingsScreen(gameSettings) }
+                2 -> TabContentWithTitle(tabTitles[2]) { RulesScreen() }
+                3 -> TabContentWithTitle(tabTitles[3]) { AuthorsScreen() }
                 4 -> GameScreen(gameSettings)
             }
         }
+    }
+}
+
+@Composable
+private fun TabContentWithTitle(
+    title: String,
+    content: @Composable () -> Unit
+) {
+    Column(modifier = Modifier.fillMaxWidth()) {
+        Text(
+            text = title,
+            style = MaterialTheme.typography.headlineSmall,
+            textAlign = TextAlign.Center,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 12.dp)
+        )
+        content()
     }
 }
