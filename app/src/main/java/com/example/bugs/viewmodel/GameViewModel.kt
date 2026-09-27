@@ -30,7 +30,11 @@ class GameViewModel : ViewModel() {
     }
 
     fun applySettings(newConfig: GameSettings) {
+        val durationChanged = newConfig.roundDuration != config.roundDuration
         config = newConfig
+        if (durationChanged) {
+            resetGame()
+        }
     }
 
     fun setScreenSize(width: Float, height: Float) {
