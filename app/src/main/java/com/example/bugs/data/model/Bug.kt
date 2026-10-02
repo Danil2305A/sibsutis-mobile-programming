@@ -1,5 +1,6 @@
 package com.example.bugs.data.model
 
+import androidx.annotation.DrawableRes
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.setValue
@@ -11,20 +12,21 @@ class Bug(
     y: Float,
     var velocityX: Float,
     var velocityY: Float,
-    val size: Float = DEFAULT_SIZE
+    val type: BugType
 ) {
     var x by mutableFloatStateOf(x)
     var y by mutableFloatStateOf(y)
+
+    val size: Float get() = type.size
+    val scoreValue: Int get() = type.score
+
+    @get:DrawableRes
+    val imageRes: Int get() = type.imageRes
 
     val angle: Float
         get() = Math.toDegrees(
             atan2(velocityY.toDouble(), velocityX.toDouble())
         ).toFloat() + 90f
-
-    companion object {
-        const val DEFAULT_SIZE = 230f
-        const val BASE_SPEED = 1f
-    }
 
     fun move(dt: Float) {
         x += velocityX * dt
@@ -32,16 +34,22 @@ class Bug(
     }
 
     fun handleBoundsCollision(
-        screenWidth: Float,
-        screenHeight: Float
+        fieldWidth: Float = FIELD_WIDTH,
+        fieldHeight: Float = FIELD_HEIGHT
     ) {
-        if (x <= 0f || x >= screenWidth - size) {
+        if (x <= 0f || x >= fieldWidth - size) {
             velocityX = -velocityX
-            x = x.coerceIn(0f, screenWidth - size)
+            x = x.coerceIn(0f, fieldWidth - size)
         }
-        if (y <= 0f || y >= screenHeight - size) {
+        if (y <= 0f || y >= fieldHeight - size) {
             velocityY = -velocityY
-            y = y.coerceIn(0f, screenHeight - size)
+            y = y.coerceIn(0f, fieldHeight - size)
         }
+    }
+
+    companion object {
+        const val FIELD_WIDTH = 1000f
+        const val FIELD_HEIGHT = 1000f
+        const val BASE_SPEED = 1f
     }
 }

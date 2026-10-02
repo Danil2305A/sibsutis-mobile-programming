@@ -5,6 +5,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -16,6 +17,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.drawscope.withTransform
@@ -26,6 +28,8 @@ import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.bugs.R
+import com.example.bugs.data.model.Bug
+import com.example.bugs.data.model.BugType
 import com.example.bugs.data.model.GameSettings
 import com.example.bugs.viewmodel.GameViewModel
 import kotlinx.coroutines.delay
@@ -79,10 +83,22 @@ fun GameField(viewModel: GameViewModel, modifier: Modifier = Modifier) {
     ) {
         val widthPx = constraints.maxWidth.toFloat()
         val heightPx = constraints.maxHeight.toFloat()
-        val bugImage = ImageBitmap.imageResource(R.drawable.bug)
 
-        LaunchedEffect(widthPx, heightPx) {
-            viewModel.setScreenSize(widthPx, heightPx)
+        val scale = minOf(
+            widthPx / Bug.FIELD_WIDTH,
+            heightPx / Bug.FIELD_HEIGHT
+        )
+
+        val offsetX = (widthPx - Bug.FIELD_WIDTH * scale) / 2f
+        val offsetY = (heightPx - Bug.FIELD_HEIGHT * scale) / 2f
+
+        fun toScreenX(x: Float) = offsetX + x * scale
+        fun toScreenY(y: Float) = offsetY + y * scale
+        fun toLogicalX(x: Float) = (x - offsetX) / scale
+        fun toLogicalY(y: Float) = (y - offsetY) / scale
+
+        val bugImages = BugType.entries.associateWith {
+            ImageBitmap.imageResource(it.imageRes)
         }
 
         Canvas(
@@ -90,20 +106,38 @@ fun GameField(viewModel: GameViewModel, modifier: Modifier = Modifier) {
                 .fillMaxSize()
                 .pointerInput(Unit) {
                     detectTapGestures { offset ->
-                        viewModel.onTap(offset.x, offset.y)
+                        val logicalX = toLogicalX(offset.x)
+                        val logicalY = toLogicalY(offset.y)
+
+                        if (logicalX in 0f..Bug.FIELD_WIDTH &&
+                            logicalY in 0f..Bug.FIELD_HEIGHT
+                        ) {
+                            viewModel.onTap(logicalX, logicalY)
+                        }
                     }
                 }
         ) {
             viewModel.bugs.forEach { bug ->
                 val half = bug.size / 2f
+                val centerX = toScreenX(bug.x + half)
+                val centerY = toScreenY(bug.y + half)
+                val bugSizeInPixels = bug.size * scale
+                val halfBugSizeInPixels = bugSizeInPixels / 2f
+
                 withTransform({
-                    translate(left = bug.x + half, top = bug.y + half)
-                    rotate(degrees = bug.angle, pivot = androidx.compose.ui.geometry.Offset.Zero)
+                    translate(left = centerX, top = centerY)
+                    rotate(degrees = bug.angle, pivot = Offset.Zero)
                 }) {
                     drawImage(
-                        image = bugImage,
-                        dstOffset = IntOffset(-half.toInt(), -half.toInt()),
-                        dstSize = IntSize(bug.size.toInt(), bug.size.toInt())
+                        image = bugImages.getValue(bug.type),
+                        dstOffset = IntOffset(
+                            (-halfBugSizeInPixels).toInt(),
+                            (-halfBugSizeInPixels).toInt()
+                        ),
+                        dstSize = IntSize(
+                            bugSizeInPixels.toInt(),
+                            bugSizeInPixels.toInt()
+                        )
                     )
                 }
             }
@@ -130,7 +164,14 @@ fun GameOverDialog(viewModel: GameViewModel) {
     AlertDialog(
         onDismissRequest = { },
         title = { Text("Игра окончена") },
-        text = { Text("Ваш счёт: ${viewModel.score}") },
+        text = {
+            Column {
+                Text("Очки: ${viewModel.score}")
+                Text("Попадания: ${viewModel.hits}")
+                Text("Промахи: ${viewModel.misses}")
+                Text("Точность: ${"%.1f".format(viewModel.accuracy)}%")
+            }
+        },
         confirmButton = {
             TextButton(
                 onClick = { viewModel.resetGame() }

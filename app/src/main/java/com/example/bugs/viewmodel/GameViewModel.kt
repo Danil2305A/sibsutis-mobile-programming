@@ -6,6 +6,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import com.example.bugs.data.model.Bug
+import com.example.bugs.data.model.BugType
 import com.example.bugs.data.model.GameSettings
 import kotlin.random.Random
 
@@ -21,13 +22,14 @@ class GameViewModel : ViewModel() {
         private set
 
     private var nextId = 0L
-    private var screenWidth = 0f
-    private var screenHeight = 0f
 
-    companion object {
-        const val SCORE_AMNT_FOR_BUG = 10
-        const val PENALTY_DEDUCTION = 5
-    }
+    var hits by mutableStateOf(0)
+        private set
+    var misses by mutableStateOf(0)
+        private set
+
+    val accuracy: Float
+        get() = if (hits + misses == 0) 0f else hits * 100f / (hits + misses)
 
     fun applySettings(newConfig: GameSettings) {
         val durationChanged = newConfig.roundDuration != config.roundDuration
@@ -37,21 +39,35 @@ class GameViewModel : ViewModel() {
         }
     }
 
-    fun setScreenSize(width: Float, height: Float) {
-        screenWidth = width
-        screenHeight = height
+    private fun getRandomBugType(): BugType {
+        val r = Random.nextFloat()
+        var acc = 0f
+
+        BugType.entries.forEach { type ->
+            acc += type.spawnWeight
+            if (r <= acc) return type
+        }
+
+        return BugType.NORMAL
     }
 
     fun spawnBug() {
         if (isGameOver) return;
         if (bugs.size >= config.maxBugAmount) return
+
+        val type = getRandomBugType()
+
         val bug = Bug(
             id = nextId++,
-            x = Random.nextFloat() * (screenWidth - Bug.DEFAULT_SIZE),
-            y = Random.nextFloat() * (screenHeight - Bug.DEFAULT_SIZE),
-            velocityX = (Random.nextFloat() - 0.5f) * 2f * Bug.BASE_SPEED * config.speed,
-            velocityY = (Random.nextFloat() - 0.5f) * 2f * Bug.BASE_SPEED * config.speed
+            x = Random.nextFloat() * (Bug.FIELD_WIDTH - type.size),
+            y = Random.nextFloat() * (Bug.FIELD_HEIGHT - type.size),
+            velocityX = (Random.nextFloat() - 0.5f) * 2f *
+                    Bug.BASE_SPEED * type.baseSpeed * config.speed,
+            velocityY = (Random.nextFloat() - 0.5f) * 2f *
+                    Bug.BASE_SPEED * type.baseSpeed * config.speed,
+            type = type
         )
+
         bugs.add(bug)
     }
 
@@ -59,19 +75,25 @@ class GameViewModel : ViewModel() {
         if (isGameOver) return;
         bugs.forEach { bug ->
             bug.move(dt)
-            bug.handleBoundsCollision(screenWidth, screenHeight)
+            bug.handleBoundsCollision()
         }
     }
 
     fun onTap(tapX: Float, tapY: Float) {
-        val hit = bugs.find{ bug ->
-            tapX in bug.x..(bug.x + bug.size) && tapY in bug.y..(bug.y + bug.size)
+        if (isGameOver) return
+
+        val hit = bugs.find { bug ->
+            tapX in bug.x..(bug.x + bug.size) &&
+                    tapY in bug.y..(bug.y + bug.size)
         }
+
         if (hit != null) {
             bugs.remove(hit)
-            score += SCORE_AMNT_FOR_BUG
+            score += hit.scoreValue
+            hits++
         } else {
             score = (score - PENALTY_DEDUCTION).coerceAtLeast(0);
+            misses++
         }
     }
 
@@ -84,8 +106,14 @@ class GameViewModel : ViewModel() {
     fun resetGame() {
         bugs.clear()
         score = 0
+        hits = 0
+        misses = 0
         timeLeft = config.roundDuration
         isGameOver = false
         nextId = 0L
+    }
+
+    companion object {
+        const val PENALTY_DEDUCTION = 5
     }
 }
