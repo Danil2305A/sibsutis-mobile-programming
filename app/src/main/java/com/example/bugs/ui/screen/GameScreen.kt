@@ -84,18 +84,20 @@ fun GameField(viewModel: GameViewModel, modifier: Modifier = Modifier) {
         val widthPx = constraints.maxWidth.toFloat()
         val heightPx = constraints.maxHeight.toFloat()
 
-        val scale = minOf(
-            widthPx / Bug.FIELD_WIDTH,
-            heightPx / Bug.FIELD_HEIGHT
-        )
+        val fieldHeight = Bug.FIELD_HEIGHT
+        val fieldWidth = fieldHeight * (widthPx / heightPx)
 
-        val offsetX = (widthPx - Bug.FIELD_WIDTH * scale) / 2f
-        val offsetY = (heightPx - Bug.FIELD_HEIGHT * scale) / 2f
 
-        fun toScreenX(x: Float) = offsetX + x * scale
-        fun toScreenY(y: Float) = offsetY + y * scale
-        fun toLogicalX(x: Float) = (x - offsetX) / scale
-        fun toLogicalY(y: Float) = (y - offsetY) / scale
+        val scale = heightPx / fieldHeight
+
+        fun toScreenX(x: Float) = x * scale
+        fun toScreenY(y: Float) = y * scale
+        fun toLogicalX(px: Float) = px / scale
+        fun toLogicalY(py: Float) = py / scale
+
+        LaunchedEffect(fieldWidth, fieldHeight) {
+            viewModel.setFieldSize(fieldWidth, fieldHeight)
+        }
 
         val bugImages = BugType.entries.associateWith {
             ImageBitmap.imageResource(it.imageRes)
@@ -109,8 +111,8 @@ fun GameField(viewModel: GameViewModel, modifier: Modifier = Modifier) {
                         val logicalX = toLogicalX(offset.x)
                         val logicalY = toLogicalY(offset.y)
 
-                        if (logicalX in 0f..Bug.FIELD_WIDTH &&
-                            logicalY in 0f..Bug.FIELD_HEIGHT
+                        if (logicalX in 0f..fieldWidth &&
+                            logicalY in 0f..fieldHeight
                         ) {
                             viewModel.onTap(logicalX, logicalY)
                         }

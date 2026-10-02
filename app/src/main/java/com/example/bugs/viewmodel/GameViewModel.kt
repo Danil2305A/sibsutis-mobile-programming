@@ -1,6 +1,8 @@
 package com.example.bugs.viewmodel
 
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -14,18 +16,24 @@ class GameViewModel : ViewModel() {
     private var config: GameSettings = GameSettings()
 
     val bugs = mutableStateListOf<Bug>()
-    var score by mutableStateOf(0)
+
+    var fieldWidth by mutableFloatStateOf(Bug.FIELD_HEIGHT)
         private set
-    var timeLeft by mutableStateOf(config.roundDuration)
+    var fieldHeight by mutableFloatStateOf(Bug.FIELD_HEIGHT)
+        private set
+
+    var score by mutableIntStateOf(0)
+        private set
+    var timeLeft by mutableIntStateOf(config.roundDuration)
         private set
     var isGameOver by mutableStateOf(false)
         private set
 
     private var nextId = 0L
 
-    var hits by mutableStateOf(0)
+    var hits by mutableIntStateOf(0)
         private set
-    var misses by mutableStateOf(0)
+    var misses by mutableIntStateOf(0)
         private set
 
     val accuracy: Float
@@ -36,6 +44,16 @@ class GameViewModel : ViewModel() {
         config = newConfig
         if (durationChanged) {
             resetGame()
+        }
+    }
+
+    fun setFieldSize(width: Float, height: Float) {
+        fieldWidth = width
+        fieldHeight = height
+
+        bugs.forEach { bug ->
+            bug.x = bug.x.coerceIn(0f, (fieldWidth - bug.size).coerceAtLeast(0f))
+            bug.y = bug.y.coerceIn(0f, (fieldHeight - bug.size).coerceAtLeast(0f))
         }
     }
 
@@ -52,15 +70,15 @@ class GameViewModel : ViewModel() {
     }
 
     fun spawnBug() {
-        if (isGameOver) return;
+        if (isGameOver) return
         if (bugs.size >= config.maxBugAmount) return
 
         val type = getRandomBugType()
 
         val bug = Bug(
             id = nextId++,
-            x = Random.nextFloat() * (Bug.FIELD_WIDTH - type.size),
-            y = Random.nextFloat() * (Bug.FIELD_HEIGHT - type.size),
+            x = Random.nextFloat() * (fieldWidth - type.size),
+            y = Random.nextFloat() * (fieldHeight - type.size),
             velocityX = (Random.nextFloat() - 0.5f) * 2f *
                     Bug.BASE_SPEED * type.baseSpeed * config.speed,
             velocityY = (Random.nextFloat() - 0.5f) * 2f *
@@ -75,7 +93,7 @@ class GameViewModel : ViewModel() {
         if (isGameOver) return;
         bugs.forEach { bug ->
             bug.move(dt)
-            bug.handleBoundsCollision()
+            bug.handleBoundsCollision(fieldWidth, fieldHeight)
         }
     }
 

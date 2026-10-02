@@ -34,21 +34,20 @@ class Bug(
     }
 
     fun handleBoundsCollision(
-        fieldWidth: Float = FIELD_WIDTH,
-        fieldHeight: Float = FIELD_HEIGHT
+        fieldWidth: Float,
+        fieldHeight: Float
     ) {
         if (x <= 0f || x >= fieldWidth - size) {
             velocityX = -velocityX
-            x = x.coerceIn(0f, fieldWidth - size)
+            x = x.coerceIn(0f, (fieldWidth - size).coerceAtLeast(0f))
         }
         if (y <= 0f || y >= fieldHeight - size) {
             velocityY = -velocityY
-            y = y.coerceIn(0f, fieldHeight - size)
+            y = y.coerceIn(0f, (fieldHeight - size).coerceAtLeast(0f))
         }
     }
 
     companion object {
-        const val FIELD_WIDTH = 1000f
         const val FIELD_HEIGHT = 1000f
         const val BASE_SPEED = 1f
     }
