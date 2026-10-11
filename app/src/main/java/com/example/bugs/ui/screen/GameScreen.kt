@@ -15,6 +15,10 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
@@ -22,25 +26,39 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.drawscope.withTransform
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.imageResource
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.bugs.R
+import com.example.bugs.data.db.entity.PlayerEntity
+import com.example.bugs.data.db.entity.ScoreEntity
 import com.example.bugs.data.model.Bug
 import com.example.bugs.data.model.BugType
 import com.example.bugs.data.model.GameSettings
+import com.example.bugs.data.repository.RepositoryProvider
 import com.example.bugs.viewmodel.GameViewModel
 import kotlinx.coroutines.delay
 import kotlin.time.Duration.Companion.seconds
 
 @Composable
-fun GameScreen(settings: MutableState<GameSettings>) {
+fun GameScreen(
+    settings: MutableState<GameSettings>,
+    currentPlayer: MutableState<PlayerEntity?>
+) {
     val viewModel: GameViewModel = viewModel()
+
+    val context = LocalContext.current
+    val repository = remember { RepositoryProvider.get(context) }
 
     LaunchedEffect(settings.value) {
         viewModel.applySettings(settings.value)
+    }
+
+    LaunchedEffect(currentPlayer.value?.id) {
+        viewModel.onPlayerChanged(currentPlayer.value?.id)
     }
 
     LaunchedEffect(Unit) {
@@ -71,6 +89,25 @@ fun GameScreen(settings: MutableState<GameSettings>) {
             delay(delayDuration)
             viewModel.tick()
         }
+    }
+
+    LaunchedEffect(viewModel.isGameOver, currentPlayer.value?.id) {
+        if (!viewModel.isGameOver) return@LaunchedEffect
+        if (viewModel.scoreSaved) return@LaunchedEffect
+
+        val player = currentPlayer.value ?: return@LaunchedEffect
+
+        repository.saveScore(
+            ScoreEntity(
+                playerId = player.id,
+                score = viewModel.score,
+                hits = viewModel.hits,
+                misses = viewModel.misses,
+                difficulty = player.difficulty,
+                settingsSpeed = settings.value.speed,
+            )
+        )
+        viewModel.markScoreSaved()
     }
 
     GameField(viewModel)

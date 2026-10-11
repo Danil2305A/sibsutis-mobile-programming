@@ -4,12 +4,13 @@ import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
+import androidx.room.Update
 import com.example.bugs.data.db.entity.PlayerEntity
 import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface PlayerDao {
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    @Insert
     suspend fun insert(player: PlayerEntity): Long
 
     @Query("SELECT * FROM players ORDER BY createdAt DESC")
@@ -23,4 +24,7 @@ interface PlayerDao {
 
     @Query("SELECT * FROM players ORDER BY id DESC")
     fun observeLast(): Flow<PlayerEntity?>
+
+    @Update
+    suspend fun update(player: PlayerEntity)
 }

@@ -48,7 +48,7 @@ fun SettingsScreen(settings: MutableState<GameSettings>) {
         SliderRow(
             label = stringResource(R.string.setting_round_duration_seconds),
             value = settings.value.roundDuration,
-            range = 30f..180f,
+            range = 5f..180f,
             onChange = { settings.value = settings.value.copy(roundDuration = it) }
         )
     }

@@ -36,6 +36,11 @@ class GameViewModel : ViewModel() {
     var misses by mutableIntStateOf(0)
         private set
 
+    var scoreSaved by mutableStateOf(false)
+        private set
+
+    private var lastPlayerId: Long? = null
+
     val accuracy: Float
         get() = if (hits + misses == 0) 0f else hits * 100f / (hits + misses)
 
@@ -45,6 +50,10 @@ class GameViewModel : ViewModel() {
         if (durationChanged) {
             resetGame()
         }
+    }
+
+    fun markScoreSaved() {
+        scoreSaved = true
     }
 
     fun setFieldSize(width: Float, height: Float) {
@@ -121,6 +130,13 @@ class GameViewModel : ViewModel() {
         if (timeLeft <= 0) isGameOver = true;
     }
 
+    fun onPlayerChanged(playerId: Long?) {
+        if (lastPlayerId != playerId) {
+            lastPlayerId = playerId
+            resetGame()
+        }
+    }
+
     fun resetGame() {
         bugs.clear()
         score = 0
@@ -129,6 +145,7 @@ class GameViewModel : ViewModel() {
         timeLeft = config.roundDuration
         isGameOver = false
         nextId = 0L
+        scoreSaved = false
     }
 
     companion object {

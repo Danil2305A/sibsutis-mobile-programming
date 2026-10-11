@@ -9,6 +9,7 @@ data class PlayerEntity(
     val fullName: String,
     val gender: String,
     val course: Int,
+    val difficulty: Int = 1,
     val birthDateMillis: Long,
     val zodiac: String,
     val zodiacResId: Int,

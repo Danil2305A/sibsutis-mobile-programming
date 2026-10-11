@@ -28,26 +28,47 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
+import com.example.bugs.data.db.entity.PlayerEntity
 import com.example.bugs.data.model.Gender
 import com.example.bugs.data.model.Player
 import com.example.bugs.data.model.RegistrationFormDefaultData
+import com.example.bugs.data.repository.RepositoryProvider
 import com.example.bugs.util.ZodiacUtil
+import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Locale
+import androidx.compose.ui.platform.LocalLocale
+import java.util.Date
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun RegistrationFormScreen() {
+fun RegistrationFormScreen(
+    currentPlayer: MutableState<PlayerEntity?>
+) {
+    val context = LocalContext.current
+    val repository = remember { RepositoryProvider.get(context) }
+    val scope = rememberCoroutineScope()
+
+    val players by repository.observePlayers()
+        .collectAsState(initial = emptyList())
+
+    var selectedPlayerId by rememberSaveable { mutableStateOf<Long?>(null) }
+    var playerExpanded by rememberSaveable { mutableStateOf(false) }
+
     val registrationFormDefaultData = RegistrationFormDefaultData()
 
     Column(
@@ -68,6 +89,61 @@ fun RegistrationFormScreen() {
         var courseExpanded by rememberSaveable() { mutableStateOf(false) }
 
         var player by remember { mutableStateOf<Player?>(null) }
+
+        Text("Выберите игрока:")
+        ExposedDropdownMenuBox(
+            expanded = playerExpanded,
+            onExpandedChange = { playerExpanded = !playerExpanded }
+        ) {
+            OutlinedTextField(
+                value = selectedPlayerId?.let { id ->
+                    players.find { it.id == id }?.fullName
+                } ?: "Новый игрок",
+                onValueChange = {},
+                readOnly = true,
+                trailingIcon = {
+                    ExposedDropdownMenuDefaults.TrailingIcon(expanded = playerExpanded)
+                },
+                modifier = Modifier.menuAnchor(
+                    ExposedDropdownMenuAnchorType.PrimaryNotEditable
+                )
+            )
+
+            ExposedDropdownMenu(
+                expanded = playerExpanded,
+                onDismissRequest = { playerExpanded = false }
+            ) {
+                DropdownMenuItem(
+                    text = { Text("Новый игрок") },
+                    onClick = {
+                        selectedPlayerId = null
+                        fullName = RegistrationFormDefaultData().fullName
+                        gender = RegistrationFormDefaultData().gender
+                        course = RegistrationFormDefaultData().course
+                        difficulty = RegistrationFormDefaultData().difficulty
+                        birthDate = RegistrationFormDefaultData().birthDate
+                        playerExpanded = false
+                    }
+                )
+
+                players.forEach { p ->
+                    DropdownMenuItem(
+                        text = { Text("${p.fullName} (#${p.id})") },
+                        onClick = {
+                            selectedPlayerId = p.id
+                            fullName = p.fullName
+                            gender = p.gender
+                            course = p.course
+                            difficulty = p.difficulty.toFloat()
+                            birthDate = Calendar.getInstance().apply {
+                                timeInMillis = p.birthDateMillis
+                            }
+                            playerExpanded = false
+                        }
+                    )
+                }
+            }
+        }
 
         Text("Введите ФИО:")
         OutlinedTextField(
@@ -141,7 +217,7 @@ fun RegistrationFormScreen() {
         Spacer(Modifier.height(12.dp))
 
         Text("Выберите дату рождения:")
-        val dateFormat = SimpleDateFormat("dd.MM.yyyy", Locale.getDefault())
+        val dateFormat = SimpleDateFormat("dd.MM.yyyy", LocalLocale.current.platformLocale)
         OutlinedButton(
             onClick = { showDatePicker = true },
             modifier = Modifier
@@ -184,24 +260,31 @@ fun RegistrationFormScreen() {
 
         FilledTonalButton(onClick = {
             if (fullName.isBlank()) {
-                player = null
                 return@FilledTonalButton
             }
             val zodiac = ZodiacUtil.getZodiac(birthDate)
-            player = Player(
-                fullName = fullName.trim(),
-                gender = gender,
-                course = course,
-                difficulty = difficulty.toInt(),
-                birthDate = birthDate,
-                zodiac = zodiac.name,
-                zodiacResId = zodiac.resId
-            )
+
+            scope.launch {
+                val entity = PlayerEntity(
+                    id = selectedPlayerId ?: 0L,
+                    fullName = fullName.trim(),
+                    gender = gender,
+                    course = course,
+                    difficulty = difficulty.toInt(),
+                    birthDateMillis = birthDate.timeInMillis,
+                    zodiac = zodiac.name,
+                    zodiacResId = zodiac.resId
+                )
+
+                val savedId = repository.upsertPlayer(entity)
+                currentPlayer.value = repository.getById(savedId)
+            }
         }) {
             Text("Зарегистрировать игрока")
         }
 
-        player?.let { p ->
+//        вывод зарегистрированного игрока
+        currentPlayer.value?.let { p ->
             Text("Зарегистрирован игрок:")
             Spacer(Modifier.height(4.dp))
 
@@ -209,23 +292,27 @@ fun RegistrationFormScreen() {
             Text("Пол: ${p.gender}")
             Text("Курс: ${p.course}")
             Text("Уровень сложности: ${p.difficulty}")
-            Text("Дата рождения: ${dateFormat.format(p.birthDate.time)}")
+            Text("Дата рождения: ${dateFormat.format(Date(p.birthDateMillis))}")
             Text("Знак зодиака:")
 
             Spacer(Modifier.height(12.dp))
 
-            if (p.zodiac != "") {
-                Image(
-                    painter = painterResource(id = p.zodiacResId),
-                    contentDescription = "Знак зодиака: ${p.zodiac}",
-                    modifier = Modifier
-                        .size(140.dp)
-                        .align(Alignment.CenterHorizontally)
-                )
-            }
+            Image(
+                painter = painterResource(id = p.zodiacResId),
+                contentDescription = "Знак зодиака: ${p.zodiac}",
+                modifier = Modifier
+                    .size(140.dp)
+                    .align(Alignment.CenterHorizontally)
+            )
         }
     }
 }
+
+// нужен data class
+//@OptIn(ExperimentalMaterial3Api::class)
+//@Composable
+//private fun SelectPlayerDropdown() {
+//}
 
 //@Preview(showBackground = true)
 //@Composable

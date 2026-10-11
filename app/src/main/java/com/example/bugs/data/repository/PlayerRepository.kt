@@ -21,15 +21,35 @@ class PlayerRepository(
     suspend fun findByName(name: String): PlayerEntity? = playerDao.findByName(name)
 
     suspend fun upsertPlayer(player: PlayerEntity): Long {
-        val existing = playerDao.findByName(player.fullName)
-        return if (existing == null) {
+        return if (player.id == 0L) {
             playerDao.insert(player)
         } else {
-            val updated = player.copy(id = existing.id, createdAt = existing.createdAt)
-            playerDao.insert(updated)
+            val existing = playerDao.getById(player.id)
+            if (existing != null) {
+                playerDao.update(player.copy(createdAt = existing.createdAt))
+                player.id
+            } else {
+                playerDao.insert(player)
+            }
+        }
+    }
+
+    suspend fun saveScore(score: ScoreEntity): Long {
+        val existing = scoreDao.findByPlayer(score.playerId)
+        return if (existing == null) {
+            scoreDao.insert(score)
+        } else {
+            if (score.score > existing.score) {
+                scoreDao.update(
+                    score.copy(
+                        id = existing.id,
+                        playedAt = score.playedAt
+                    )
+                )
+            }
             existing.id
         }
     }
 
-    suspend fun saveScore(score: ScoreEntity): Long = scoreDao.insert(score)
+    suspend fun clearScores() = scoreDao.clearAll()
 }

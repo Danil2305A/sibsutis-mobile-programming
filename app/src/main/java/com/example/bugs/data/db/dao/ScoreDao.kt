@@ -3,6 +3,7 @@ package com.example.bugs.data.db.dao
 import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.Query
+import androidx.room.Update
 import com.example.bugs.data.db.entity.ScoreEntity
 import kotlinx.coroutines.flow.Flow
 
@@ -19,6 +20,7 @@ interface ScoreDao {
                s.difficulty AS difficulty,
                s.settingsSpeed AS settingsSpeed,
                s.playedAt AS playedAt,
+               p.id as playerId,
                p.fullName AS fullName,
                p.zodiac AS zodiac,
                p.zodiacResId AS zodiacResId,
@@ -34,6 +36,16 @@ interface ScoreDao {
 
     @Query("DELETE FROM scores")
     suspend fun clearAll()
+
+    @Query( "SELECT * " +
+                    "FROM scores " +
+                    "WHERE playerId = :playerId " +
+                    "ORDER BY score DESC " +
+                    "LIMIT 1")
+    suspend fun findByPlayer(playerId: Long): ScoreEntity?
+
+    @Update
+    suspend fun update(score: ScoreEntity)
 }
 
 data class RecordRow(
@@ -44,6 +56,7 @@ data class RecordRow(
     val difficulty: Int,
     val settingsSpeed: Int,
     val playedAt: Long,
+    val playerId: Long,
     val fullName: String,
     val zodiac: String,
     val zodiacResId: Int,

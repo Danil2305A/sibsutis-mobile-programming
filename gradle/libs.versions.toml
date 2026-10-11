@@ -9,9 +9,9 @@ activityCompose = "1.13.0"
 kotlin = "2.2.10"
 composeBom = "2026.02.01"
 uiGeometry = "1.12.1"
-roomRuntime = "2.6.1"
+roomRuntime = "2.8.5"
 runtimeLivedata = "1.6.5"
-ksp = "1.9.0-1.0.13"
+ksp = "2.3.6"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
