@@ -1,6 +1,8 @@
 package com.example.bugs.ui.screen
 
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -74,7 +76,9 @@ fun MainScreen() {
     ) { padding ->
         HorizontalPager(
             state = pagerState,
-            modifier = Modifier.padding(padding)
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(padding)
         ) { page ->
             when (page) {
                 0 -> TabContentWithTitle(tabTitles[0]) { RegistrationFormScreen(currentPlayer) }
@@ -93,7 +97,7 @@ private fun TabContentWithTitle(
     title: String,
     content: @Composable () -> Unit
 ) {
-    Column(modifier = Modifier.fillMaxWidth()) {
+    Column(modifier = Modifier.fillMaxSize()) {
         Text(
             text = title,
             style = MaterialTheme.typography.headlineSmall,
@@ -102,6 +106,8 @@ private fun TabContentWithTitle(
                 .fillMaxWidth()
                 .padding(vertical = 12.dp)
         )
-        content()
+        Box(modifier = Modifier.weight(1f)) {
+            content()
+        }
     }
 }
