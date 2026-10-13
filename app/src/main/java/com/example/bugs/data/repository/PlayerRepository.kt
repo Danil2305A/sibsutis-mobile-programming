@@ -52,4 +52,6 @@ class PlayerRepository(
     }
 
     suspend fun clearScores() = scoreDao.clearAll()
+
+    suspend fun deletePlayer(id: Long) = playerDao.deleteById(id)
 }

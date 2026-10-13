@@ -27,4 +27,7 @@ interface PlayerDao {
 
     @Update
     suspend fun update(player: PlayerEntity)
+
+    @Query("DELETE FROM players WHERE id = :id")
+    suspend fun deleteById(id: Long)
 }
