@@ -316,12 +316,11 @@ fun RegistrationFormScreen(
                 currentPlayer.value = repository.getById(savedId)
             }
         }) {
-            Text("Зарегистрировать игрока")
+            Text("Подтвердить регистрацию/выбор")
         }
 
 //        вывод зарегистрированного игрока
         currentPlayer.value?.let { p ->
-            Text("Зарегистрирован игрок:")
             Spacer(Modifier.height(4.dp))
 
             Text("ФИО: ${p.fullName}")
