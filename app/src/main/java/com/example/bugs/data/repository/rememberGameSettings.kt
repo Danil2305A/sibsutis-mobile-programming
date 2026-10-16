@@ -1,0 +1,56 @@
+package com.example.bugs.data.repository
+
+import android.content.Context
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.ui.platform.LocalContext
+import com.example.bugs.data.model.GameSettings
+import androidx.core.content.edit
+
+@Composable
+fun rememberGameSettings(): MutableState<GameSettings> {
+    val ctx = LocalContext.current
+    val prefs = remember { ctx.getSharedPreferences("game", Context.MODE_PRIVATE) }
+    val state = remember {
+        mutableStateOf(
+            GameSettings(
+                speed = prefs.getInt("speed", 5),
+                maxBugAmount = prefs.getInt("maxBugAmount", 10),
+                bonusInterval = prefs.getInt("bonusInterval", 10),
+                roundDuration = prefs.getInt("roundDuration", 60)
+            )
+        )
+    }
+    LaunchedEffect(state.value) {
+        val s = state.value
+        prefs.edit {
+            putInt("speed", s.speed)
+                .putInt("maxBugAmount", s.maxBugAmount)
+                .putInt("bonusInterval", s.bonusInterval)
+                .putInt("roundDuration", s.roundDuration)
+        }
+    }
+    return state
+}
+
+private const val PREFS_NAME = "game"
+private const val KEY_ONBOARDING_SHOWN = "difficulty_onboarding_shown"
+
+@Composable
+fun rememberOnboardingShown(): MutableState<Boolean> {
+    val ctx = LocalContext.current
+    val prefs = remember { ctx.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE) }
+    return remember {
+        mutableStateOf(prefs.getBoolean(KEY_ONBOARDING_SHOWN, false))
+    }
+}
+
+fun markOnboardingShown(context: Context) {
+    context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        .edit {
+            putBoolean(KEY_ONBOARDING_SHOWN, true)
+        }
+}

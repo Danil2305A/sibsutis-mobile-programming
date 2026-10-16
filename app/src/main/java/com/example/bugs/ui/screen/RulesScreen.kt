@@ -1,4 +1,4 @@
-package com.example.bugs.tab
+package com.example.bugs.ui.screen
 
 
 import android.text.Html

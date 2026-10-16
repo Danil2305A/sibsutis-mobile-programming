@@ -1,4 +1,4 @@
-package com.example.bugs.model
+package com.example.bugs.data.model
 
 data class GameSettings(
     val speed: Int = 5,
