@@ -1,5 +1,11 @@
 package com.example.bugs.ui.screen
 
+import android.content.Context
+import android.hardware.Sensor
+import android.hardware.SensorEvent
+import android.hardware.SensorEventListener
+import android.hardware.SensorManager
+import android.media.MediaPlayer
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectTapGestures
@@ -13,6 +19,7 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
@@ -20,6 +27,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.withFrameNanos
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
@@ -112,6 +120,57 @@ fun GameScreen(
         viewModel.markScoreSaved()
     }
 
+    val sensorManager = remember {
+        context.getSystemService(Context.SENSOR_SERVICE) as SensorManager
+    }
+
+    val tiltSensor = remember {
+        sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+            ?: sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER)
+    }
+
+    DisposableEffect(tiltSensor) {
+        if (tiltSensor == null) return@DisposableEffect onDispose { }
+
+        val listener = object : SensorEventListener {
+            override fun onSensorChanged(event: SensorEvent) {
+                val g = SensorManager.GRAVITY_EARTH
+                viewModel.onTilt(
+                    x = -event.values[0] / g,
+                    y = event.values[1] / g
+                )
+            }
+            override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) = Unit
+        }
+
+        sensorManager.registerListener(
+            listener,
+            tiltSensor,
+            SensorManager.SENSOR_DELAY_GAME
+        )
+
+        onDispose { sensorManager.unregisterListener(listener) }
+    }
+
+    val screamPlayer = remember {
+        MediaPlayer.create(context, R.raw.bug_scream)?.apply {
+            isLooping = true
+        }
+    }
+
+    DisposableEffect(Unit) {
+        onDispose { screamPlayer?.release() }
+    }
+
+    LaunchedEffect(viewModel.tiltModeActive) {
+        if (viewModel.tiltModeActive) {
+            screamPlayer?.seekTo(0)
+            screamPlayer?.start()
+        } else {
+            screamPlayer?.pause()
+        }
+    }
+
     GameField(viewModel)
 }
 
@@ -141,6 +200,8 @@ fun GameField(viewModel: GameViewModel, modifier: Modifier = Modifier) {
         val bugImages = BugType.entries.associateWith {
             ImageBitmap.imageResource(it.imageRes)
         }
+
+        val bonusImage = ImageBitmap.imageResource(R.drawable.bonus_tilt)
 
         Canvas(
             modifier = Modifier
@@ -182,6 +243,24 @@ fun GameField(viewModel: GameViewModel, modifier: Modifier = Modifier) {
                     )
                 }
             }
+
+            if (viewModel.bonusVisible) {
+                val centerX = toScreenX(viewModel.bonusX + viewModel.bonusSize / 2f)
+                val centerY = toScreenY(viewModel.bonusY + viewModel.bonusSize / 2f)
+                val bonusSizePx = viewModel.bonusSize * scale
+                val half = bonusSizePx / 2f
+
+                withTransform({
+                    translate(left = centerX, top = centerY)
+                    rotate(degrees = -25f, pivot = Offset.Zero)
+                }) {
+                    drawImage(
+                        image = bonusImage,
+                        dstOffset = IntOffset((-half).toInt(), (-half).toInt()),
+                        dstSize = IntSize(bonusSizePx.toInt(), bonusSizePx.toInt())
+                    )
+                }
+            }
         }
 
         Row(
@@ -192,6 +271,14 @@ fun GameField(viewModel: GameViewModel, modifier: Modifier = Modifier) {
         ) {
             Text("Очки: ${viewModel.score}")
             Text("Время: ${viewModel.timeLeft} сек")
+
+            if (viewModel.tiltModeActive) {
+                Text(
+                    text = "НАКЛОН!",
+                    color = Color.Red,
+                    modifier = Modifier.align(Alignment.CenterVertically)
+                )
+            }
         }
 
         if (viewModel.isGameOver) {

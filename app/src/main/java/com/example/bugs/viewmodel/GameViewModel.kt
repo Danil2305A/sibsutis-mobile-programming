@@ -44,6 +44,27 @@ class GameViewModel : ViewModel() {
     val accuracy: Float
         get() = if (hits + misses == 0) 0f else hits * 100f / (hits + misses)
 
+    var bonusVisible by mutableStateOf(false)
+        private set
+
+    var bonusX by mutableFloatStateOf(0f)
+        private set
+
+    var bonusY by mutableFloatStateOf(0f)
+        private set
+
+    val bonusSize = 120f
+
+    var tiltModeActive by mutableStateOf(false)
+        private set
+
+    private var bonusTimer = BONUS_INTERVAL_SECONDS
+    private var bonusLifeLeft = 0
+    private var tiltModeLeft = 0
+
+    private var tiltX = 0f
+    private var tiltY = 0f
+
     fun applySettings(newConfig: GameSettings) {
         val durationChanged = newConfig.roundDuration != config.roundDuration
         config = newConfig
@@ -78,6 +99,18 @@ class GameViewModel : ViewModel() {
         return BugType.NORMAL
     }
 
+    fun onTilt(x: Float, y: Float) {
+        tiltX = x
+        tiltY = y
+    }
+
+    private fun spawnBonus() {
+        bonusX = Random.nextFloat() * (fieldWidth - bonusSize)
+        bonusY = Random.nextFloat() * (fieldHeight - bonusSize)
+        bonusVisible = true
+        bonusLifeLeft = BONUS_LIFETIME_SECONDS
+    }
+
     fun spawnBug() {
         if (isGameOver) return
         if (bugs.size >= config.maxBugAmount) return
@@ -101,6 +134,11 @@ class GameViewModel : ViewModel() {
     fun updatePositions(dt: Float) {
         if (isGameOver) return;
         bugs.forEach { bug ->
+            if (tiltModeActive) {
+                bug.x += tiltX * TILT_FORCE * dt
+                bug.y += tiltY * TILT_FORCE * dt
+            }
+
             bug.move(dt)
             bug.handleBoundsCollision(fieldWidth, fieldHeight)
         }
@@ -109,6 +147,17 @@ class GameViewModel : ViewModel() {
     fun onTap(tapX: Float, tapY: Float) {
         if (isGameOver) return
 
+//        логика бонуса
+        if (bonusVisible
+            && tapX in bonusX..(bonusX + bonusSize)
+            && tapY in bonusY..(bonusY + bonusSize)) {
+            bonusVisible = false
+            tiltModeActive = true
+            tiltModeLeft = TILT_MODE_DURATION_SECONDS
+            return
+        }
+
+//        логика жука
         val hit = bugs.find { bug ->
             tapX in bug.x..(bug.x + bug.size) &&
                     tapY in bug.y..(bug.y + bug.size)
@@ -126,8 +175,30 @@ class GameViewModel : ViewModel() {
 
     fun tick() {
         if (isGameOver) return;
+
         timeLeft -= 1
-        if (timeLeft <= 0) isGameOver = true;
+        if (timeLeft <= 0) {
+            isGameOver = true;
+            return
+        }
+
+        if (bonusVisible) {
+            bonusLifeLeft--
+            if (bonusLifeLeft <= 0) bonusVisible = false
+        }
+
+        if (tiltModeActive) {
+            tiltModeLeft--
+            if (tiltModeLeft <= 0) tiltModeActive = false
+        }
+
+        bonusTimer--
+        if (bonusTimer <= 0) {
+            if (!bonusVisible && !tiltModeActive) {
+                spawnBonus()
+            }
+            bonusTimer = BONUS_INTERVAL_SECONDS
+        }
     }
 
     fun onPlayerChanged(playerId: Long?) {
@@ -146,9 +217,22 @@ class GameViewModel : ViewModel() {
         isGameOver = false
         nextId = 0L
         scoreSaved = false
+
+        bonusVisible = false
+        tiltModeActive = false
+        bonusTimer = BONUS_INTERVAL_SECONDS
+        bonusLifeLeft = 0
+        tiltModeLeft = 0
+        tiltX = 0f
+        tiltY = 0f
     }
 
     companion object {
         const val PENALTY_DEDUCTION = 5
+
+        const val BONUS_INTERVAL_SECONDS = 15
+        const val BONUS_LIFETIME_SECONDS = 6
+        const val TILT_MODE_DURATION_SECONDS = 10
+        const val TILT_FORCE = 3f
     }
 }
