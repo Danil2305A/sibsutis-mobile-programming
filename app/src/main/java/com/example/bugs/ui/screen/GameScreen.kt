@@ -33,6 +33,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.drawscope.withTransform
 import androidx.compose.ui.input.pointer.pointerInput
@@ -156,24 +157,26 @@ fun GameScreen(
     }
 
     val screamPlayer = remember {
-        MediaPlayer().apply {
-            setAudioAttributes(
-                AudioAttributes.Builder()
-                    .setUsage(AudioAttributes.USAGE_GAME)
-                    .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
-                    .build()
-            )
-            try {
-                context.resources.openRawResourceFd(R.raw.bug_scream).use { afd ->
-                    setDataSource(afd.fileDescriptor, afd.startOffset, afd.length)
+        runCatching {
+            MediaPlayer().apply {
+                setAudioAttributes(
+                    AudioAttributes.Builder()
+                        .setUsage(AudioAttributes.USAGE_GAME)
+                        .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
+                        .build()
+                )
+                try {
+                    context.resources.openRawResourceFd(R.raw.bug_scream).use { afd ->
+                        setDataSource(afd.fileDescriptor, afd.startOffset, afd.length)
+                    }
+                    prepare()
+                } catch (e: Exception) {
+                    android.util.Log.e("BugScream", "prepare failed", e)
                 }
-                prepare()
-            } catch (e: Exception) {
-                android.util.Log.e("BugScream", "prepare failed", e)
+                isLooping = true
+                setVolume(0.1f ,0.1f)
             }
-            isLooping = true
-            setVolume(0.1f ,0.1f)
-        }
+        }.getOrNull()
     }
 
     DisposableEffect(Unit) {
@@ -188,6 +191,13 @@ fun GameScreen(
             player.start()
         } else {
             if (player.isPlaying) player.pause()
+        }
+    }
+
+    LaunchedEffect(viewModel.isGameOver) {
+        val player = screamPlayer ?: return@LaunchedEffect
+        if (viewModel.isGameOver && player.isPlaying) {
+            runCatching { player.pause() }
         }
     }
 

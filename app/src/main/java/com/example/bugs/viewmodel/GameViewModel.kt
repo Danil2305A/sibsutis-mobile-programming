@@ -67,9 +67,14 @@ class GameViewModel : ViewModel() {
 
     fun applySettings(newConfig: GameSettings) {
         val durationChanged = newConfig.roundDuration != config.roundDuration
+        val bonusIntervalChanged = newConfig.bonusInterval != config.bonusInterval
+
         config = newConfig
+
         if (durationChanged) {
             resetGame()
+        } else if (bonusIntervalChanged && !bonusVisible && !tiltModeActive) {
+            bonusTimer = newConfig.bonusInterval
         }
     }
 
@@ -179,6 +184,7 @@ class GameViewModel : ViewModel() {
         timeLeft -= 1
         if (timeLeft <= 0) {
             isGameOver = true;
+            tiltModeActive = false;
             return
         }
 
@@ -197,7 +203,7 @@ class GameViewModel : ViewModel() {
             if (!bonusVisible && !tiltModeActive) {
                 spawnBonus()
             }
-            bonusTimer = BONUS_INTERVAL_SECONDS
+            bonusTimer = config.bonusInterval
         }
     }
 
@@ -220,7 +226,7 @@ class GameViewModel : ViewModel() {
 
         bonusVisible = false
         tiltModeActive = false
-        bonusTimer = BONUS_INTERVAL_SECONDS
+        bonusTimer = config.bonusInterval
         bonusLifeLeft = 0
         tiltModeLeft = 0
         tiltX = 0f
