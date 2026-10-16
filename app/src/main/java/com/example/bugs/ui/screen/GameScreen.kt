@@ -5,6 +5,7 @@ import android.hardware.Sensor
 import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
 import android.hardware.SensorManager
+import android.media.AudioAttributes
 import android.media.MediaPlayer
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
@@ -14,6 +15,7 @@ import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Text
@@ -36,6 +38,7 @@ import androidx.compose.ui.graphics.drawscope.withTransform
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.imageResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
@@ -153,8 +156,23 @@ fun GameScreen(
     }
 
     val screamPlayer = remember {
-        MediaPlayer.create(context, R.raw.bug_scream)?.apply {
+        MediaPlayer().apply {
+            setAudioAttributes(
+                AudioAttributes.Builder()
+                    .setUsage(AudioAttributes.USAGE_GAME)
+                    .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
+                    .build()
+            )
+            try {
+                context.resources.openRawResourceFd(R.raw.bug_scream).use { afd ->
+                    setDataSource(afd.fileDescriptor, afd.startOffset, afd.length)
+                }
+                prepare()
+            } catch (e: Exception) {
+                android.util.Log.e("BugScream", "prepare failed", e)
+            }
             isLooping = true
+            setVolume(0.1f ,0.1f)
         }
     }
 
@@ -163,11 +181,13 @@ fun GameScreen(
     }
 
     LaunchedEffect(viewModel.tiltModeActive) {
+        val player = screamPlayer ?: return@LaunchedEffect
+
         if (viewModel.tiltModeActive) {
-            screamPlayer?.seekTo(0)
-            screamPlayer?.start()
+            player.seekTo(0)
+            player.start()
         } else {
-            screamPlayer?.pause()
+            if (player.isPlaying) player.pause()
         }
     }
 
@@ -176,113 +196,116 @@ fun GameScreen(
 
 @Composable
 fun GameField(viewModel: GameViewModel, modifier: Modifier = Modifier) {
-    BoxWithConstraints(modifier = modifier
-        .fillMaxSize()
-    ) {
-        val widthPx = constraints.maxWidth.toFloat()
-        val heightPx = constraints.maxHeight.toFloat()
-
-        val fieldHeight = Bug.FIELD_HEIGHT
-        val fieldWidth = fieldHeight * (widthPx / heightPx)
-
-
-        val scale = heightPx / fieldHeight
-
-        fun toScreenX(x: Float) = x * scale
-        fun toScreenY(y: Float) = y * scale
-        fun toLogicalX(px: Float) = px / scale
-        fun toLogicalY(py: Float) = py / scale
-
-        LaunchedEffect(fieldWidth, fieldHeight) {
-            viewModel.setFieldSize(fieldWidth, fieldHeight)
-        }
-
-        val bugImages = BugType.entries.associateWith {
-            ImageBitmap.imageResource(it.imageRes)
-        }
-
-        val bonusImage = ImageBitmap.imageResource(R.drawable.bonus_tilt)
-
-        Canvas(
-            modifier = Modifier
-                .fillMaxSize()
-                .pointerInput(Unit) {
-                    detectTapGestures { offset ->
-                        val logicalX = toLogicalX(offset.x)
-                        val logicalY = toLogicalY(offset.y)
-
-                        if (logicalX in 0f..fieldWidth &&
-                            logicalY in 0f..fieldHeight
-                        ) {
-                            viewModel.onTap(logicalX, logicalY)
-                        }
-                    }
-                }
-        ) {
-            viewModel.bugs.forEach { bug ->
-                val half = bug.size / 2f
-                val centerX = toScreenX(bug.x + half)
-                val centerY = toScreenY(bug.y + half)
-                val bugSizeInPixels = bug.size * scale
-                val halfBugSizeInPixels = bugSizeInPixels / 2f
-
-                withTransform({
-                    translate(left = centerX, top = centerY)
-                    rotate(degrees = bug.angle, pivot = Offset.Zero)
-                }) {
-                    drawImage(
-                        image = bugImages.getValue(bug.type),
-                        dstOffset = IntOffset(
-                            (-halfBugSizeInPixels).toInt(),
-                            (-halfBugSizeInPixels).toInt()
-                        ),
-                        dstSize = IntSize(
-                            bugSizeInPixels.toInt(),
-                            bugSizeInPixels.toInt()
-                        )
-                    )
-                }
-            }
-
-            if (viewModel.bonusVisible) {
-                val centerX = toScreenX(viewModel.bonusX + viewModel.bonusSize / 2f)
-                val centerY = toScreenY(viewModel.bonusY + viewModel.bonusSize / 2f)
-                val bonusSizePx = viewModel.bonusSize * scale
-                val half = bonusSizePx / 2f
-
-                withTransform({
-                    translate(left = centerX, top = centerY)
-                    rotate(degrees = -25f, pivot = Offset.Zero)
-                }) {
-                    drawImage(
-                        image = bonusImage,
-                        dstOffset = IntOffset((-half).toInt(), (-half).toInt()),
-                        dstSize = IntSize(bonusSizePx.toInt(), bonusSizePx.toInt())
-                    )
-                }
-            }
-        }
-
+    Column(modifier = modifier.fillMaxSize()) {
         Row(
             modifier = Modifier
-                .fillMaxSize()
+                .fillMaxWidth()
                 .padding(16.dp),
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            Text("Очки: ${viewModel.score}")
-            Text("Время: ${viewModel.timeLeft} сек")
-
             if (viewModel.tiltModeActive) {
                 Text(
                     text = "НАКЛОН!",
                     color = Color.Red,
-                    modifier = Modifier.align(Alignment.CenterVertically)
+                    fontWeight = FontWeight.Bold
                 )
             }
+
+            Text("Очки: ${viewModel.score}")
+            Text("Время: ${viewModel.timeLeft} сек")
         }
 
-        if (viewModel.isGameOver) {
-            GameOverDialog(viewModel)
+        BoxWithConstraints(modifier = modifier
+            .fillMaxWidth()
+            .weight(1f)
+        ) {
+            val widthPx = constraints.maxWidth.toFloat()
+            val heightPx = constraints.maxHeight.toFloat()
+
+            val fieldHeight = Bug.FIELD_HEIGHT
+            val fieldWidth = fieldHeight * (widthPx / heightPx)
+
+
+            val scale = heightPx / fieldHeight
+
+            fun toScreenX(x: Float) = x * scale
+            fun toScreenY(y: Float) = y * scale
+            fun toLogicalX(px: Float) = px / scale
+            fun toLogicalY(py: Float) = py / scale
+
+            LaunchedEffect(fieldWidth, fieldHeight) {
+                viewModel.setFieldSize(fieldWidth, fieldHeight)
+            }
+
+            val bugImages = BugType.entries.associateWith {
+                ImageBitmap.imageResource(it.imageRes)
+            }
+
+            val bonusImage = ImageBitmap.imageResource(R.drawable.bonus_tilt)
+
+            Canvas(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .pointerInput(Unit) {
+                        detectTapGestures { offset ->
+                            val logicalX = toLogicalX(offset.x)
+                            val logicalY = toLogicalY(offset.y)
+
+                            if (logicalX in 0f..fieldWidth &&
+                                logicalY in 0f..fieldHeight
+                            ) {
+                                viewModel.onTap(logicalX, logicalY)
+                            }
+                        }
+                    }
+            ) {
+                viewModel.bugs.forEach { bug ->
+                    val half = bug.size / 2f
+                    val centerX = toScreenX(bug.x + half)
+                    val centerY = toScreenY(bug.y + half)
+                    val bugSizeInPixels = bug.size * scale
+                    val halfBugSizeInPixels = bugSizeInPixels / 2f
+
+                    withTransform({
+                        translate(left = centerX, top = centerY)
+                        rotate(degrees = bug.angle, pivot = Offset.Zero)
+                    }) {
+                        drawImage(
+                            image = bugImages.getValue(bug.type),
+                            dstOffset = IntOffset(
+                                (-halfBugSizeInPixels).toInt(),
+                                (-halfBugSizeInPixels).toInt()
+                            ),
+                            dstSize = IntSize(
+                                bugSizeInPixels.toInt(),
+                                bugSizeInPixels.toInt()
+                            )
+                        )
+                    }
+                }
+
+                if (viewModel.bonusVisible) {
+                    val centerX = toScreenX(viewModel.bonusX + viewModel.bonusSize / 2f)
+                    val centerY = toScreenY(viewModel.bonusY + viewModel.bonusSize / 2f)
+                    val bonusSizePx = viewModel.bonusSize * scale
+                    val half = bonusSizePx / 2f
+
+                    withTransform({
+                        translate(left = centerX, top = centerY)
+                        rotate(degrees = -25f, pivot = Offset.Zero)
+                    }) {
+                        drawImage(
+                            image = bonusImage,
+                            dstOffset = IntOffset((-half).toInt(), (-half).toInt()),
+                            dstSize = IntSize(bonusSizePx.toInt(), bonusSizePx.toInt())
+                        )
+                    }
+                }
+            }
+
+            if (viewModel.isGameOver) {
+                GameOverDialog(viewModel)
+            }
         }
     }
 }
