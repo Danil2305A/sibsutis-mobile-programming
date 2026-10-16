@@ -4,11 +4,13 @@ import android.content.Context
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
+import androidx.room.TypeConverters
 import com.example.bugs.data.db.dao.PlayerDao
 import com.example.bugs.data.db.dao.ScoreDao
 import com.example.bugs.data.db.entity.PlayerEntity
 import com.example.bugs.data.db.entity.ScoreEntity
 
+@TypeConverters(Converters::class)
 @Database(
     entities = [PlayerEntity::class, ScoreEntity::class],
     version = 2,
