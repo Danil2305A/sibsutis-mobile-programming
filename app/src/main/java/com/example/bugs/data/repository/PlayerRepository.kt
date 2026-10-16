@@ -5,6 +5,7 @@ import com.example.bugs.data.db.dao.RecordRow
 import com.example.bugs.data.db.dao.ScoreDao
 import com.example.bugs.data.db.entity.PlayerEntity
 import com.example.bugs.data.db.entity.ScoreEntity
+import com.example.bugs.data.model.DifficultyPreset
 import kotlinx.coroutines.flow.Flow
 
 class PlayerRepository(
@@ -35,23 +36,24 @@ class PlayerRepository(
     }
 
     suspend fun saveScore(score: ScoreEntity): Long {
-        val existing = scoreDao.findByPlayer(score.playerId)
+        val existing = scoreDao.findBestForPlayerAndDifficulty(
+            score.playerId,
+            score.difficulty
+        )
         return if (existing == null) {
             scoreDao.insert(score)
         } else {
             if (score.score > existing.score) {
-                scoreDao.update(
-                    score.copy(
-                        id = existing.id,
-                        playedAt = score.playedAt
-                    )
-                )
+                scoreDao.update(score.copy(id = existing.id))
             }
             existing.id
         }
     }
 
     suspend fun clearScores() = scoreDao.clearAll()
+
+    fun observeRecordsByDifficulty(preset: DifficultyPreset): Flow<List<RecordRow>> =
+        scoreDao.observeRecordsByDifficulty(preset)
 
     suspend fun deletePlayer(id: Long) = playerDao.deleteById(id)
 }

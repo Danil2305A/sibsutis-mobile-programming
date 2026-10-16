@@ -11,7 +11,7 @@ import com.example.bugs.data.db.entity.ScoreEntity
 
 @Database(
     entities = [PlayerEntity::class, ScoreEntity::class],
-    version = 1,
+    version = 2,
     exportSchema = false
 )
 abstract class AppDatabase: RoomDatabase() {
@@ -29,7 +29,7 @@ abstract class AppDatabase: RoomDatabase() {
                     AppDatabase::class.java,
                     "bugs.db"
                 )
-                    .fallbackToDestructiveMigration()
+                    .fallbackToDestructiveMigration(true)
                     .build()
                     .also { INSTANCE = it }
         }

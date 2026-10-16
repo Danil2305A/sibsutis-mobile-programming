@@ -2,6 +2,7 @@ package com.example.bugs.data.db.entity
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey
+import com.example.bugs.data.model.DifficultyPreset
 
 @Entity(tableName = "players")
 data class PlayerEntity(
@@ -9,7 +10,7 @@ data class PlayerEntity(
     val fullName: String,
     val gender: String,
     val course: Int,
-    val difficulty: Int = 1,
+    val difficulty: DifficultyPreset = DifficultyPreset.MEDIUM,
     val birthDateMillis: Long,
     val zodiac: String,
     val zodiacResId: Int,

@@ -46,6 +46,8 @@ enum class DifficultyPreset(
     companion object {
         val selectable: List<DifficultyPreset> = listOf(EASY, MEDIUM, HARD)
 
+        val all: List<DifficultyPreset> = entries.toList()
+
         fun from(settings: GameSettings): DifficultyPreset =
             selectable.firstOrNull { it.matches(settings) } ?: CUSTOM
 

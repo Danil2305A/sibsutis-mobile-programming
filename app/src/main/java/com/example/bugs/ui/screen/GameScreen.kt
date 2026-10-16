@@ -37,6 +37,7 @@ import com.example.bugs.data.db.entity.PlayerEntity
 import com.example.bugs.data.db.entity.ScoreEntity
 import com.example.bugs.data.model.Bug
 import com.example.bugs.data.model.BugType
+import com.example.bugs.data.model.DifficultyPreset
 import com.example.bugs.data.model.GameSettings
 import com.example.bugs.data.repository.RepositoryProvider
 import com.example.bugs.viewmodel.GameViewModel
@@ -96,6 +97,7 @@ fun GameScreen(
         if (viewModel.scoreSaved) return@LaunchedEffect
 
         val player = currentPlayer.value ?: return@LaunchedEffect
+        val diffPreset = DifficultyPreset.from(settings.value)
 
         repository.saveScore(
             ScoreEntity(
@@ -103,7 +105,7 @@ fun GameScreen(
                 score = viewModel.score,
                 hits = viewModel.hits,
                 misses = viewModel.misses,
-                difficulty = player.difficulty,
+                difficulty = diffPreset,
                 settingsSpeed = settings.value.speed,
             )
         )

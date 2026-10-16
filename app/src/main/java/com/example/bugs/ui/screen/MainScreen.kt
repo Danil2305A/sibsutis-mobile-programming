@@ -81,7 +81,7 @@ fun MainScreen() {
                 .padding(padding)
         ) { page ->
             when (page) {
-                0 -> TabContentWithTitle(tabTitles[0]) { RegistrationFormScreen(currentPlayer) }
+                0 -> TabContentWithTitle(tabTitles[0]) { RegistrationFormScreen(currentPlayer, gameSettings) }
                 1 -> TabContentWithTitle(tabTitles[1]) { SettingsScreen(gameSettings) }
                 2 -> TabContentWithTitle(tabTitles[2]) { RulesScreen() }
                 3 -> TabContentWithTitle(tabTitles[3]) { AuthorsScreen() }

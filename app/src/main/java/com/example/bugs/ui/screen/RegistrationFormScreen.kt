@@ -66,11 +66,14 @@ import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.IconButton
+import com.example.bugs.data.model.DifficultyPreset
+import com.example.bugs.data.model.GameSettings
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RegistrationFormScreen(
-    currentPlayer: MutableState<PlayerEntity?>
+    currentPlayer: MutableState<PlayerEntity?>,
+    gameSettings: MutableState<GameSettings>
 ) {
     val context = LocalContext.current
     val repository = remember { RepositoryProvider.get(context) }
@@ -93,7 +96,9 @@ fun RegistrationFormScreen(
         var fullName by rememberSaveable() { mutableStateOf(registrationFormDefaultData.fullName) }
         var gender by rememberSaveable() { mutableStateOf(registrationFormDefaultData.gender) }
         var course by rememberSaveable() { mutableStateOf(registrationFormDefaultData.course) }
-        var difficulty by rememberSaveable() { mutableStateOf(registrationFormDefaultData.difficulty) }
+
+        var difficulty by rememberSaveable { mutableStateOf(registrationFormDefaultData.difficulty) }
+        var difficultyExpanded by rememberSaveable { mutableStateOf(false) }
 
         var birthDate by rememberSaveable() { mutableStateOf(registrationFormDefaultData.birthDate) }
         var showDatePicker by rememberSaveable() { mutableStateOf(false) }
@@ -138,6 +143,7 @@ fun RegistrationFormScreen(
                         course = RegistrationFormDefaultData().course
                         difficulty = RegistrationFormDefaultData().difficulty
                         birthDate = RegistrationFormDefaultData().birthDate
+                        gameSettings.value = RegistrationFormDefaultData().difficulty.toSettings()
                         playerExpanded = false
                     }
                 )
@@ -150,10 +156,11 @@ fun RegistrationFormScreen(
                             fullName = p.fullName
                             gender = p.gender
                             course = p.course
-                            difficulty = p.difficulty.toFloat()
+                            difficulty = p.difficulty
                             birthDate = Calendar.getInstance().apply {
                                 timeInMillis = p.birthDateMillis
                             }
+                            gameSettings.value = p.difficulty.toSettings()
                             playerExpanded = false
                         },
                         trailingIcon = {
@@ -238,17 +245,38 @@ fun RegistrationFormScreen(
 
         Spacer(Modifier.height(12.dp))
 
-        Text("Выберите уровень сложности:")
-        Slider(
-            value = difficulty,
-            onValueChange = { difficulty = it },
-            valueRange = 1f..10f,
-            steps = 8,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 48.dp)
-        )
-        Text("Значение: ${difficulty.toInt()}")
+        Text("Уровень сложности:")
+        ExposedDropdownMenuBox(
+            expanded = difficultyExpanded,
+            onExpandedChange = { difficultyExpanded = !difficultyExpanded }
+        ) {
+            OutlinedTextField(
+                value = difficulty.title,
+                onValueChange = {},
+                readOnly = true,
+                trailingIcon = {
+                    ExposedDropdownMenuDefaults.TrailingIcon(expanded = difficultyExpanded)
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .menuAnchor(ExposedDropdownMenuAnchorType.PrimaryNotEditable)
+            )
+            ExposedDropdownMenu(
+                expanded = difficultyExpanded,
+                onDismissRequest = { difficultyExpanded = false }
+            ) {
+                DifficultyPreset.selectable.forEach { preset ->
+                    DropdownMenuItem(
+                        text = { Text(preset.title) },
+                        onClick = {
+                            difficulty = preset
+                            gameSettings.value = preset.toSettings()
+                            difficultyExpanded = false
+                        }
+                    )
+                }
+            }
+        }
 
         Spacer(Modifier.height(12.dp))
 
@@ -306,14 +334,17 @@ fun RegistrationFormScreen(
                     fullName = fullName.trim(),
                     gender = gender,
                     course = course,
-                    difficulty = difficulty.toInt(),
+                    difficulty = difficulty,
                     birthDateMillis = birthDate.timeInMillis,
                     zodiac = zodiac.name,
                     zodiacResId = zodiac.resId
                 )
 
                 val savedId = repository.upsertPlayer(entity)
-                currentPlayer.value = repository.getById(savedId)
+                val savedPlayer = repository.getById(savedId)
+
+                currentPlayer.value = savedPlayer
+                savedPlayer?.let { gameSettings.value = it.difficulty.toSettings() }
             }
         }) {
             Text("Подтвердить регистрацию/выбор")
@@ -326,11 +357,10 @@ fun RegistrationFormScreen(
             Text("ФИО: ${p.fullName}")
             Text("Пол: ${p.gender}")
             Text("Курс: ${p.course}")
-            Text("Уровень сложности: ${p.difficulty}")
+            Text("Уровень сложности: ${p.difficulty.title}")
             Text("Дата рождения: ${dateFormat.format(Date(p.birthDateMillis))}")
             Text("Знак зодиака:")
 
-            Spacer(Modifier.height(12.dp))
 
             Image(
                 painter = painterResource(id = p.zodiacResId),
