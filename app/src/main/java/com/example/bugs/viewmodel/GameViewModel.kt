@@ -239,6 +239,6 @@ class GameViewModel : ViewModel() {
         const val BONUS_INTERVAL_SECONDS = 15
         const val BONUS_LIFETIME_SECONDS = 6
         const val TILT_MODE_DURATION_SECONDS = 10
-        const val TILT_FORCE = 0.1f
+        const val TILT_FORCE = 10f
     }
 }

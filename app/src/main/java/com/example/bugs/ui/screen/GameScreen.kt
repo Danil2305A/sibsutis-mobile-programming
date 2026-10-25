@@ -66,8 +66,6 @@ fun GameScreen(
     val viewModel: GameViewModel = viewModel()
 
     val view = LocalView.current
-    val rotMatrix = FloatArray(9)
-    val remapMatrix = FloatArray(9)
 
     val context = LocalContext.current
     val repository = remember { RepositoryProvider.get(context) }
@@ -144,28 +142,22 @@ fun GameScreen(
 
         val listener = object : SensorEventListener {
             override fun onSensorChanged(event: SensorEvent) {
-                val (ax, ay) = when (view.display?.rotation) {
-                    Surface.ROTATION_0   -> SensorManager.AXIS_X to SensorManager.AXIS_Y
-                    Surface.ROTATION_90  -> SensorManager.AXIS_Y to SensorManager.AXIS_MINUS_X
-                    Surface.ROTATION_180 -> SensorManager.AXIS_MINUS_X to SensorManager.AXIS_MINUS_Y
-                    Surface.ROTATION_270 -> SensorManager.AXIS_MINUS_Y to SensorManager.AXIS_X
+                val (gx, gy) = when (view.display?.rotation) {
+                    Surface.ROTATION_0   ->  event.values[0] to  event.values[1]
+                    Surface.ROTATION_90  -> -event.values[1] to  event.values[0]
+                    Surface.ROTATION_180 -> -event.values[0] to -event.values[1]
+                    Surface.ROTATION_270 ->  event.values[1] to -event.values[0]
                     else -> return
                 }
-
-                SensorManager.getRotationMatrixFromVector(rotMatrix, event.values)
-                SensorManager.remapCoordinateSystem(rotMatrix, ax, ay, remapMatrix)
-
-                viewModel.onTilt(-remapMatrix[6], remapMatrix[7])
+                viewModel.onTilt(
+                    -gx / SensorManager.GRAVITY_EARTH,
+                    gy / SensorManager.GRAVITY_EARTH
+                )
             }
             override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) = Unit
         }
 
-        sensorManager.registerListener(
-            listener,
-            tiltSensor,
-            SensorManager.SENSOR_DELAY_GAME
-        )
-
+        sensorManager.registerListener(listener, tiltSensor, SensorManager.SENSOR_DELAY_UI)
         onDispose { sensorManager.unregisterListener(listener) }
     }
 
