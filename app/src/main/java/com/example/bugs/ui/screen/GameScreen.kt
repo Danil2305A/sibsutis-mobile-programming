@@ -7,6 +7,7 @@ import android.hardware.SensorEventListener
 import android.hardware.SensorManager
 import android.media.AudioAttributes
 import android.media.MediaPlayer
+import android.view.Surface
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectTapGestures
@@ -38,6 +39,7 @@ import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.drawscope.withTransform
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.imageResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.IntOffset
@@ -62,6 +64,10 @@ fun GameScreen(
     currentPlayer: MutableState<PlayerEntity?>
 ) {
     val viewModel: GameViewModel = viewModel()
+
+    val view = LocalView.current
+    val rotMatrix = FloatArray(9)
+    val remapMatrix = FloatArray(9)
 
     val context = LocalContext.current
     val repository = remember { RepositoryProvider.get(context) }
@@ -138,11 +144,18 @@ fun GameScreen(
 
         val listener = object : SensorEventListener {
             override fun onSensorChanged(event: SensorEvent) {
-                val g = SensorManager.GRAVITY_EARTH
-                viewModel.onTilt(
-                    x = -event.values[0] / g,
-                    y = event.values[1] / g
-                )
+                val (ax, ay) = when (view.display?.rotation) {
+                    Surface.ROTATION_0   -> SensorManager.AXIS_X to SensorManager.AXIS_Y
+                    Surface.ROTATION_90  -> SensorManager.AXIS_Y to SensorManager.AXIS_MINUS_X
+                    Surface.ROTATION_180 -> SensorManager.AXIS_MINUS_X to SensorManager.AXIS_MINUS_Y
+                    Surface.ROTATION_270 -> SensorManager.AXIS_MINUS_Y to SensorManager.AXIS_X
+                    else -> return
+                }
+
+                SensorManager.getRotationMatrixFromVector(rotMatrix, event.values)
+                SensorManager.remapCoordinateSystem(rotMatrix, ax, ay, remapMatrix)
+
+                viewModel.onTilt(-remapMatrix[6], remapMatrix[7])
             }
             override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) = Unit
         }
