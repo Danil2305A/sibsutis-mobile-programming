@@ -25,7 +25,6 @@ class GoldRateWidgetProvider : AppWidgetProvider() {
         appWidgetManager: AppWidgetManager,
         appWidgetIds: IntArray
     ) {
-        // Только рисуем. НИКАКОГО WorkManager здесь.
         val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
         val currentText = prefs.getString(KEY_PRICE_TEXT, "") ?: ""
 
@@ -37,7 +36,6 @@ class GoldRateWidgetProvider : AppWidgetProvider() {
     override fun onReceive(context: Context, intent: Intent) {
         super.onReceive(context, intent)
 
-        // Клик по виджету обрабатываем отдельно
         if (intent.action == ACTION_REFRESH_CLICK) {
             val ids = intent.getIntArrayExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS)
                 ?: AppWidgetManager.getInstance(context)
@@ -62,7 +60,7 @@ class GoldRateWidgetProvider : AppWidgetProvider() {
             .build()
         WorkManager.getInstance(context).enqueueUniqueWork(
             WORK_NAME,
-            ExistingWorkPolicy.REPLACE, // новый клик = новый запрос
+            ExistingWorkPolicy.REPLACE,
             request
         )
     }
@@ -97,7 +95,6 @@ class GoldRateWidgetProvider : AppWidgetProvider() {
         }
 
         fun updateAll(context: Context, priceText: String) {
-            // Сохраняем в кэш, чтобы пережить пересоздание виджета
             context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
                 .edit()
                 .putString(KEY_PRICE_TEXT, priceText)
