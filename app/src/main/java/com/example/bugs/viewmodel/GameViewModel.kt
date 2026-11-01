@@ -10,9 +10,10 @@ import androidx.lifecycle.ViewModel
 import com.example.bugs.data.model.Bug
 import com.example.bugs.data.model.BugType
 import com.example.bugs.data.model.GameSettings
+import com.example.bugs.data.repository.GoldRateProvider
 import kotlin.random.Random
 
-class GameViewModel : ViewModel() {
+class GameViewModel(val goldRateProvider: GoldRateProvider) : ViewModel() {
     private var config: GameSettings = GameSettings()
 
     val bugs = mutableStateListOf<Bug>()
@@ -61,6 +62,11 @@ class GameViewModel : ViewModel() {
     private var bonusTimer = BONUS_INTERVAL_SECONDS
     private var bonusLifeLeft = 0
     private var tiltModeLeft = 0
+
+    private var goldBugTimer = GOLD_BUG_INTERVAL_SECONDS
+    private var goldBugId: Long? = null
+
+    private val defaultGoldScore = 10
 
     private var tiltX = 0f
     private var tiltY = 0f
@@ -136,6 +142,25 @@ class GameViewModel : ViewModel() {
         bugs.add(bug)
     }
 
+    fun spawnGoldBug() {
+        if (isGameOver) return
+        if (goldBugId != null) return
+
+        val type = BugType.GOLD
+        val bug = Bug(
+            id = nextId++,
+            x = Random.nextFloat() * (fieldWidth - type.size),
+            y = Random.nextFloat() * (fieldHeight - type.size),
+            velocityX = (Random.nextFloat() - 0.5f) * 2f *
+                    Bug.BASE_SPEED * type.baseSpeed * config.speed,
+            velocityY = (Random.nextFloat() - 0.5f) * 2f *
+                    Bug.BASE_SPEED * type.baseSpeed * config.speed,
+            type = type
+        )
+        bugs.add(bug)
+        goldBugId = bug.id
+    }
+
     fun updatePositions(dt: Float) {
         if (isGameOver) return;
         bugs.forEach { bug ->
@@ -147,6 +172,14 @@ class GameViewModel : ViewModel() {
             bug.move(dt)
             bug.handleBoundsCollision(fieldWidth, fieldHeight)
         }
+    }
+
+    private fun calculateGoldBugScore(): Int {
+        val rate = goldRateProvider.getLastKnownRate()
+            ?: return defaultGoldScore
+
+        // 1 очко за каждые 100 ₽/г, минимум 10
+        return (rate / 100).toInt().coerceAtLeast(defaultGoldScore)
     }
 
     fun onTap(tapX: Float, tapY: Float) {
@@ -170,7 +203,12 @@ class GameViewModel : ViewModel() {
 
         if (hit != null) {
             bugs.remove(hit)
-            score += hit.scoreValue
+            if (hit.type == BugType.GOLD) {
+                score += calculateGoldBugScore()
+                goldBugId = null
+            } else {
+                score += hit.scoreValue
+            }
             hits++
         } else {
             score = (score - PENALTY_DEDUCTION).coerceAtLeast(0);
@@ -205,6 +243,14 @@ class GameViewModel : ViewModel() {
             }
             bonusTimer = config.bonusInterval
         }
+
+        goldBugTimer--
+        if (goldBugTimer <= 0) {
+            if (!isGameOver && goldBugId == null) {
+                spawnGoldBug()
+            }
+            goldBugTimer = GOLD_BUG_INTERVAL_SECONDS
+        }
     }
 
     fun onPlayerChanged(playerId: Long?) {
@@ -231,6 +277,9 @@ class GameViewModel : ViewModel() {
         tiltModeLeft = 0
         tiltX = 0f
         tiltY = 0f
+
+        goldBugTimer = GOLD_BUG_INTERVAL_SECONDS
+        goldBugId = null
     }
 
     companion object {
@@ -240,5 +289,7 @@ class GameViewModel : ViewModel() {
         const val BONUS_LIFETIME_SECONDS = 6
         const val TILT_MODE_DURATION_SECONDS = 10
         const val TILT_FORCE = 10f
+
+        const val GOLD_BUG_INTERVAL_SECONDS = 20
     }
 }

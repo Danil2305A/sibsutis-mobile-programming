@@ -55,6 +55,7 @@ import com.example.bugs.data.model.DifficultyPreset
 import com.example.bugs.data.model.GameSettings
 import com.example.bugs.data.repository.RepositoryProvider
 import com.example.bugs.viewmodel.GameViewModel
+import com.example.bugs.viewmodel.GameViewModelFactory
 import kotlinx.coroutines.delay
 import kotlin.time.Duration.Companion.seconds
 
@@ -63,7 +64,7 @@ fun GameScreen(
     settings: MutableState<GameSettings>,
     currentPlayer: MutableState<PlayerEntity?>
 ) {
-    val viewModel: GameViewModel = viewModel()
+    val viewModel: GameViewModel = viewModel(factory = GameViewModelFactory)
 
     val view = LocalView.current
 
@@ -76,6 +77,12 @@ fun GameScreen(
 
     LaunchedEffect(currentPlayer.value?.id) {
         viewModel.onPlayerChanged(currentPlayer.value?.id)
+    }
+
+    LaunchedEffect(Unit) {
+        kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+            viewModel.goldRateProvider.getTodayGoldRate()
+        }
     }
 
     LaunchedEffect(Unit) {

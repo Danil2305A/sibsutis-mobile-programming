@@ -29,5 +29,12 @@ enum class BugType(
         baseSpeed = 0.7f,
         score = 50,
         spawnWeight = 0.1f
+    ),
+    GOLD(
+        imageRes = R.drawable.gold_bug,
+        size = 130f,
+        baseSpeed = 0.9f,
+        score = 0,
+        spawnWeight = 0f
     )
 }
