@@ -6,30 +6,31 @@ import android.appwidget.AppWidgetProvider
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
+import android.net.ConnectivityManager
+import android.net.NetworkCapabilities
 import android.widget.RemoteViews
-import androidx.work.Constraints
 import androidx.work.CoroutineWorker
 import androidx.work.ExistingWorkPolicy
-import androidx.work.NetworkType
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.WorkerParameters
 import com.example.bugs.R
-import com.example.bugs.client.GoldRateProvider
+import com.example.bugs.data.repository.GoldRateProvider
+import com.example.bugs.data.repository.GoldRateCache
 import java.util.Locale
 
 class GoldRateWidgetProvider : AppWidgetProvider() {
-
     override fun onUpdate(
         context: Context,
         appWidgetManager: AppWidgetManager,
         appWidgetIds: IntArray
     ) {
-        val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
-        val currentText = prefs.getString(KEY_PRICE_TEXT, "") ?: ""
+        val cache = GoldRateCache(context)
+        val price = cache.getLastPrice()
+        val text = price?.let { formatPrice(it) } ?: "—"
 
         appWidgetIds.forEach { id ->
-            appWidgetManager.updateAppWidget(id, buildViews(context, appWidgetIds, currentText))
+            appWidgetManager.updateAppWidget(id, buildViews(context, appWidgetIds, text))
         }
     }
 
@@ -52,11 +53,7 @@ class GoldRateWidgetProvider : AppWidgetProvider() {
     }
 
     private fun enqueueUpdate(context: Context) {
-        val constraints = Constraints.Builder()
-            .setRequiredNetworkType(NetworkType.CONNECTED)
-            .build()
         val request = OneTimeWorkRequestBuilder<GoldRateWorker>()
-            .setConstraints(constraints)
             .build()
         WorkManager.getInstance(context).enqueueUniqueWork(
             WORK_NAME,
@@ -66,8 +63,6 @@ class GoldRateWidgetProvider : AppWidgetProvider() {
     }
 
     companion object {
-        private const val PREFS_NAME = "gold_widget"
-        private const val KEY_PRICE_TEXT = "price_text"
         private const val WORK_NAME = "gold_rate_update"
         const val ACTION_REFRESH_CLICK = "com.example.bugs.ACTION_REFRESH_CLICK"
 
@@ -95,11 +90,6 @@ class GoldRateWidgetProvider : AppWidgetProvider() {
         }
 
         fun updateAll(context: Context, priceText: String) {
-            context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
-                .edit()
-                .putString(KEY_PRICE_TEXT, priceText)
-                .apply()
-
             val manager = AppWidgetManager.getInstance(context)
             val ids = manager.getAppWidgetIds(
                 ComponentName(context, GoldRateWidgetProvider::class.java)
@@ -108,6 +98,9 @@ class GoldRateWidgetProvider : AppWidgetProvider() {
                 manager.updateAppWidget(id, buildViews(context, ids, priceText))
             }
         }
+
+        fun formatPrice(price: Double): String =
+            String.format(Locale("ru"), "%.2f ₽/г", price)
     }
 }
 
@@ -117,21 +110,41 @@ class GoldRateWorker(
 ) : CoroutineWorker(context, params) {
 
     override suspend fun doWork(): Result {
-        return try {
-            val provider = GoldRateProvider()
-            val price = provider.getGoldRateWithFallback()
+        val cache = GoldRateCache(applicationContext)
+        val provider = GoldRateProvider(cache = cache)
 
+        if (!isNetworkAvailable()) {
+            val lastKnown = provider.getLastKnownRate()
+            val text = lastKnown?.let { GoldRateWidgetProvider.formatPrice(it) } ?: "нет сети"
+            GoldRateWidgetProvider.updateAll(applicationContext, text)
+            return Result.success()
+        }
+
+        return try {
+            val price = provider.getTodayGoldRate()
             if (price == null) {
-                GoldRateWidgetProvider.updateAll(applicationContext, "нет данных")
+                val lastKnown = provider.getLastKnownRate()
+                val text = lastKnown?.let { GoldRateWidgetProvider.formatPrice(it) } ?: "нет данных"
+                GoldRateWidgetProvider.updateAll(applicationContext, text)
                 return Result.success()
             }
-
-            val priceText = String.format(Locale("ru"), "%.2f ₽/г", price)
-            GoldRateWidgetProvider.updateAll(applicationContext, priceText)
+            GoldRateWidgetProvider.updateAll(
+                applicationContext,
+                GoldRateWidgetProvider.formatPrice(price)
+            )
             Result.success()
         } catch (e: Exception) {
-            GoldRateWidgetProvider.updateAll(applicationContext, "ошибка")
+            val lastKnown = provider.getLastKnownRate()
+            val text = lastKnown?.let { GoldRateWidgetProvider.formatPrice(it) } ?: "ошибка"
+            GoldRateWidgetProvider.updateAll(applicationContext, text)
             Result.success()
         }
+    }
+
+    private fun isNetworkAvailable(): Boolean {
+        val cm = applicationContext.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+        val network = cm.activeNetwork ?: return false
+        val caps = cm.getNetworkCapabilities(network) ?: return false
+        return caps.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
     }
 }
