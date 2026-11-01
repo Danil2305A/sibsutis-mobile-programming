@@ -4,6 +4,12 @@ plugins {
     alias(libs.plugins.devtoolsKsp)
 }
 
+kotlin {
+    compilerOptions {
+        freeCompilerArgs.add("-Xannotation-default-target=param-property")
+    }
+}
+
 android {
     namespace = "com.example.bugs"
     compileSdk {
@@ -63,4 +69,9 @@ dependencies {
     implementation(libs.androidx.room.ktx)
     implementation (libs.androidx.runtime.livedata)
     ksp(libs.androidx.room.room.compiler)
+
+    implementation("com.squareup.retrofit2:retrofit:2.11.0")
+    implementation("com.squareup.retrofit2:converter-jackson:2.11.0")
+    implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.18.2")
+    implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-xml:2.13.0")
 }
