@@ -80,9 +80,7 @@ fun GameScreen(
     }
 
     LaunchedEffect(Unit) {
-        kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
-            viewModel.goldRateProvider.getTodayGoldRate()
-        }
+        viewModel.preloadGoldRate()
     }
 
     LaunchedEffect(Unit) {

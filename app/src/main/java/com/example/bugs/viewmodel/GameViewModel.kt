@@ -7,10 +7,12 @@ import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.example.bugs.data.model.Bug
 import com.example.bugs.data.model.BugType
 import com.example.bugs.data.model.GameSettings
 import com.example.bugs.data.repository.GoldRateProvider
+import kotlinx.coroutines.launch
 import kotlin.random.Random
 
 class GameViewModel(val goldRateProvider: GoldRateProvider) : ViewModel() {
@@ -140,6 +142,12 @@ class GameViewModel(val goldRateProvider: GoldRateProvider) : ViewModel() {
         )
 
         bugs.add(bug)
+    }
+
+    fun preloadGoldRate() {
+        viewModelScope.launch {
+            goldRateProvider.getTodayGoldRate()
+        }
     }
 
     fun spawnGoldBug() {
@@ -280,6 +288,8 @@ class GameViewModel(val goldRateProvider: GoldRateProvider) : ViewModel() {
 
         goldBugTimer = GOLD_BUG_INTERVAL_SECONDS
         goldBugId = null
+
+        preloadGoldRate()
     }
 
     companion object {
