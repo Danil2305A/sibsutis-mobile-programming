@@ -74,4 +74,6 @@ dependencies {
     implementation("com.squareup.retrofit2:converter-jackson:2.11.0")
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.18.2")
     implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-xml:2.13.0")
+    implementation("javax.xml.stream:stax-api:1.0-2")
+    implementation("com.fasterxml.woodstox:woodstox-core:7.1.0")
 }
