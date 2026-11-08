@@ -47,13 +47,6 @@ fun MainScreen(
     val currentPlayer by mainViewModel.currentPlayer
     val gameSettings = rememberGameSettings()
 
-////    очистка БД (таблица рекордов)
-//    val context = LocalContext.current
-//    val repository = remember { RepositoryProvider.get(context) }
-//    LaunchedEffect(Unit) {
-//        repository.clearScores()
-//    }
-
     Scaffold(
         topBar = {
             TabRow(selectedTabIndex = pagerState.currentPage) {
@@ -116,17 +109,3 @@ private fun TabContentWithTitle(
         }
     }
 }
-
-// для тестов
-//@Composable
-//fun MainScreen() {
-//    DisposableEffect(Unit) {
-//        println("появились на экране")
-//
-//        onDispose {
-//            println("ушли с экрана")
-//        }
-//    }
-//
-//    Text("Привет")
-//}
