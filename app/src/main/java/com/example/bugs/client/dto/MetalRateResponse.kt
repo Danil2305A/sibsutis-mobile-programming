@@ -13,6 +13,7 @@ data class MetalRateResponse(
     var records: List<MetalRateRecord> = emptyList()
 )
 
+@JsonIgnoreProperties(ignoreUnknown = true)
 data class MetalRateRecord(
     @JacksonXmlProperty(localName = "Buy")
     var buy: String? = null,

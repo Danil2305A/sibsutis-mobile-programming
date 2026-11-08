@@ -16,12 +16,19 @@ animation = "1.12.1"
 ui = "1.12.1"
 workRuntimeKtx = "2.12.0"
 
+# Libs
 retrofit = "2.11.0"
 jackson = "2.18.2"
 jacksonXml = "2.13.0"
 staxApi = "1.0-2"
 woodstox = "7.1.0"
 koin = "4.2.2"
+
+# Testing
+mockk = "1.14.12"
+coroutinesTest = "1.11.0"
+robolectric = "4.17"
+androidxTestCore = "1.7.0"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -64,6 +71,12 @@ woodstox-core = { module = "com.fasterxml.woodstox:woodstox-core", version.ref =
 # Koin
 koin-android = { module = "io.insert-koin:koin-android", version.ref = "koin" }
 koin-androidx-compose = { module = "io.insert-koin:koin-androidx-compose", version.ref = "koin" }
+
+# Testing
+mockk = { module = "io.mockk:mockk", version.ref = "mockk" }
+kotlinx-coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "coroutinesTest" }
+robolectric = { module = "org.robolectric:robolectric", version.ref = "robolectric" }
+androidx-test-core = { module = "androidx.test:core", version.ref = "androidxTestCore" }
 
 
 [plugins]
