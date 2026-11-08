@@ -2,13 +2,15 @@ package com.example.bugs.data.repository
 
 import com.example.bugs.client.CbrClient
 import com.example.bugs.client.MetalRateProvider
+import com.example.bugs.client.dto.MetalRateRecord
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
 class GoldRateProvider(
     private val provider: MetalRateProvider = CbrClient.metalRateProvider,
-    private val cache: GoldRateCache
+    private val cache: GoldRateCache,
+    private val clock: () -> Date = { Date() }
 ) {
     private val dateFormat = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
 
@@ -34,10 +36,12 @@ class GoldRateProvider(
         }
     }
 
+    private fun daysToMillis(daysCount: Int): Long = daysCount * 24L * 60 * 60 * 1000
+
     private suspend fun fetchFromNetwork(): Double? {
         return try {
-            val today = Date()
-            val from = Date(today.time - FALLBACK_DAYS * 24L * 60 * 60 * 1000)
+            val today = clock()
+            val from = Date(today.time - daysToMillis(FALLBACK_DAYS))
             val response = provider.getMetalRate(
                 dateFormat.format(from),
                 dateFormat.format(today)
@@ -52,7 +56,7 @@ class GoldRateProvider(
         }
     }
 
-    private fun com.example.bugs.client.dto.MetalRateRecord.parsePrice(): Double? =
+    private fun MetalRateRecord.parsePrice(): Double? =
         buy?.replace(",", ".")?.toDoubleOrNull()
             ?: sell?.replace(",", ".")?.toDoubleOrNull()
 
