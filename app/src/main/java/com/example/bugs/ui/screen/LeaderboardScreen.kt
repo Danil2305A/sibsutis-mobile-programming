@@ -31,7 +31,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.bugs.data.db.dao.RecordRow
 import com.example.bugs.data.model.DifficultyPreset
-import com.example.bugs.data.repository.RepositoryProvider
+import com.example.bugs.data.repository.PlayerRepository
+import org.koin.compose.koinInject
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -39,7 +40,7 @@ import java.util.Locale
 @Composable
 fun LeaderboardScreen() {
     val context = LocalContext.current
-    val repository = remember { RepositoryProvider.get(context) }
+    val repository: PlayerRepository = koinInject()
 
     val presets = DifficultyPreset.all
     var selectedIndex by rememberSaveable { mutableIntStateOf(0) }

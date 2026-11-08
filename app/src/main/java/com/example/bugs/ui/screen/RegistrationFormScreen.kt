@@ -16,7 +16,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Button
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.DropdownMenuItem
@@ -30,7 +29,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.RadioButton
-import androidx.compose.material3.Slider
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberDatePickerState
@@ -53,12 +51,10 @@ import com.example.bugs.data.db.entity.PlayerEntity
 import com.example.bugs.data.model.Gender
 import com.example.bugs.data.model.Player
 import com.example.bugs.data.model.RegistrationFormDefaultData
-import com.example.bugs.data.repository.RepositoryProvider
 import com.example.bugs.util.ZodiacUtil
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Calendar
-import java.util.Locale
 import androidx.compose.ui.platform.LocalLocale
 import java.util.Date
 import androidx.compose.material.icons.Icons
@@ -68,15 +64,18 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.IconButton
 import com.example.bugs.data.model.DifficultyPreset
 import com.example.bugs.data.model.GameSettings
+import com.example.bugs.data.repository.PlayerRepository
+import org.koin.compose.koinInject
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RegistrationFormScreen(
-    currentPlayer: MutableState<PlayerEntity?>,
+    currentPlayer: PlayerEntity?,
+    onCurrentPlayerChange: (PlayerEntity?) -> Unit,
     gameSettings: MutableState<GameSettings>
 ) {
     val context = LocalContext.current
-    val repository = remember { RepositoryProvider.get(context) }
+    val repository: PlayerRepository = koinInject()
     val scope = rememberCoroutineScope()
 
     val players by repository.observePlayers()
@@ -343,7 +342,7 @@ fun RegistrationFormScreen(
                 val savedId = repository.upsertPlayer(entity)
                 val savedPlayer = repository.getById(savedId)
 
-                currentPlayer.value = savedPlayer
+                onCurrentPlayerChange(savedPlayer)
                 savedPlayer?.let { gameSettings.value = it.difficulty.toSettings() }
             }
         }) {
@@ -351,7 +350,7 @@ fun RegistrationFormScreen(
         }
 
 //        вывод зарегистрированного игрока
-        currentPlayer.value?.let { p ->
+        currentPlayer?.let { p ->
             Spacer(Modifier.height(4.dp))
 
             Text("ФИО: ${p.fullName}")
@@ -416,8 +415,8 @@ fun RegistrationFormScreen(
                             scope.launch {
                                 repository.deletePlayer(idToDelete)
 
-                                if (currentPlayer.value?.id == idToDelete) {
-                                    currentPlayer.value = null
+                                if (currentPlayer?.id == idToDelete) {
+                                    onCurrentPlayerChange(null)
                                 }
                                 if (selectedPlayerId == idToDelete) {
                                     selectedPlayerId = null

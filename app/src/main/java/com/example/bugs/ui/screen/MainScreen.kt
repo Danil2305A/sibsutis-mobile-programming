@@ -15,25 +15,23 @@ import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringArrayResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.example.bugs.R
-import com.example.bugs.data.db.entity.PlayerEntity
-import com.example.bugs.data.repository.RepositoryProvider
 import com.example.bugs.data.repository.rememberGameSettings
+import com.example.bugs.viewmodel.MainViewModel
 import kotlinx.coroutines.launch
+import org.koin.androidx.compose.koinViewModel
 
 @Composable
-fun MainScreen() {
+fun MainScreen(
+    mainViewModel: MainViewModel = koinViewModel()
+) {
     val tabIcons = listOf(
         R.drawable.auth,
         R.drawable.settings,
@@ -45,8 +43,8 @@ fun MainScreen() {
     val tabTitles = stringArrayResource(R.array.tabs)
     val pagerState = rememberPagerState(pageCount = { tabIcons.size })
     val scope = rememberCoroutineScope()
-    val currentPlayer = remember { mutableStateOf<PlayerEntity?>(null) }
 
+    val currentPlayer by mainViewModel.currentPlayer
     val gameSettings = rememberGameSettings()
 
 ////    очистка БД (таблица рекордов)
@@ -82,7 +80,13 @@ fun MainScreen() {
                 .padding(padding)
         ) { page ->
             when (page) {
-                0 -> TabContentWithTitle(tabTitles[0]) { RegistrationFormScreen(currentPlayer, gameSettings) }
+                0 -> TabContentWithTitle(tabTitles[0]) {
+                    RegistrationFormScreen(
+                        currentPlayer = currentPlayer,
+                        onCurrentPlayerChange = mainViewModel::setCurrentPlayer,
+                        gameSettings = gameSettings
+                    )
+                }
                 1 -> TabContentWithTitle(tabTitles[1]) { SettingsScreen(gameSettings) }
                 2 -> TabContentWithTitle(tabTitles[2]) { RulesScreen() }
                 3 -> TabContentWithTitle(tabTitles[3]) { AuthorsScreen() }

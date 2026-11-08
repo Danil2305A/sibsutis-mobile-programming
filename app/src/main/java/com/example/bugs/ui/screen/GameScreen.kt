@@ -9,7 +9,6 @@ import android.media.AudioAttributes
 import android.media.MediaPlayer
 import android.view.Surface
 import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -25,16 +24,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.runtime.withFrameNanos
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.drawscope.withTransform
 import androidx.compose.ui.input.pointer.pointerInput
@@ -45,7 +39,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.bugs.R
 import com.example.bugs.data.db.entity.PlayerEntity
 import com.example.bugs.data.db.entity.ScoreEntity
@@ -53,30 +46,30 @@ import com.example.bugs.data.model.Bug
 import com.example.bugs.data.model.BugType
 import com.example.bugs.data.model.DifficultyPreset
 import com.example.bugs.data.model.GameSettings
-import com.example.bugs.data.repository.RepositoryProvider
+import com.example.bugs.data.repository.PlayerRepository
 import com.example.bugs.viewmodel.GameViewModel
-import com.example.bugs.viewmodel.GameViewModelFactory
 import kotlinx.coroutines.delay
+import org.koin.androidx.compose.koinViewModel
+import org.koin.compose.koinInject
 import kotlin.time.Duration.Companion.seconds
 
 @Composable
 fun GameScreen(
     settings: MutableState<GameSettings>,
-    currentPlayer: MutableState<PlayerEntity?>
+    currentPlayer: PlayerEntity?
 ) {
-    val viewModel: GameViewModel = viewModel(factory = GameViewModelFactory)
-
     val view = LocalView.current
-
     val context = LocalContext.current
-    val repository = remember { RepositoryProvider.get(context) }
+
+    val viewModel: GameViewModel = koinViewModel()
+    val repository: PlayerRepository = koinInject()
 
     LaunchedEffect(settings.value) {
         viewModel.applySettings(settings.value)
     }
 
-    LaunchedEffect(currentPlayer.value?.id) {
-        viewModel.onPlayerChanged(currentPlayer.value?.id)
+    LaunchedEffect(currentPlayer?.id) {
+        viewModel.onPlayerChanged(currentPlayer?.id)
     }
 
     LaunchedEffect(Unit) {
@@ -113,11 +106,11 @@ fun GameScreen(
         }
     }
 
-    LaunchedEffect(viewModel.isGameOver, currentPlayer.value?.id) {
+    LaunchedEffect(viewModel.isGameOver, currentPlayer?.id) {
         if (!viewModel.isGameOver) return@LaunchedEffect
         if (viewModel.scoreSaved) return@LaunchedEffect
 
-        val player = currentPlayer.value ?: return@LaunchedEffect
+        val player = currentPlayer ?: return@LaunchedEffect
         val diffPreset = DifficultyPreset.from(settings.value)
 
         repository.saveScore(
